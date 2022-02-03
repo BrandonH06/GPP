@@ -51,7 +51,794 @@ struct Board
 
     std::vector<int> pinnedMask;
 
+    std::vector<int> checkMap;
+
+    std::vector<bool> genCheckMask(bool isBlack, std::vector<bool>& pinnedMask)
+    {
+        pinnedMask = std::vector<bool>(64, false);
+
+        std::vector<bool> checkMask(64, false);
+        int p;
+        int maybePinned = -1;
+        if (isBlack)
+        {
+            p = bKing;
+        }
+        else
+        {
+            p = wKing;
+        }
+
+        
+        maybePinned = -1;
+        std::vector<int> tempCheckMask;
+        int leftSquares = ((p % 8) + 1);
+        for (int i = 1; i < leftSquares; i++)
+        {
+            int left = p - 1 * i;
+            if (Pieces[left].type == PieceType::Empty)
+            {
+                tempCheckMask.push_back(left);
+            }
+            else
+            {
+                if (Pieces[left].isBlack != Pieces[p].isBlack)
+                {
+                    tempCheckMask.push_back(left);
+
+                    if (maybePinned != -1)
+                    {
+                        pinnedMask[maybePinned] = true;
+                    }
+                    else
+                    {
+                        for (int i = 0; i < tempCheckMask.size(); i++)
+                        {
+                            checkMask[tempCheckMask[i]] = true;
+                        }
+                    }
+
+                    break;
+                }
+                else
+                {
+                    if (maybePinned == -1)
+                    {
+                        maybePinned = left;
+                    }
+                }
+            }
+        }
+    }
+
     std::vector<int> possibleMoves(int p)
+    {
+        std::vector<int> moves;
+
+        if (Pieces[p].type == PieceType::Pawn)
+        {
+            int direction = -1;
+            if (Pieces[p].isBlack)
+            {
+                direction = 1;
+            }
+
+            //Moving Forward
+            int SquareInfront = p + (8 * direction);
+            if (SquareInfront >= 0 && SquareInfront < 64)
+            {
+                if (Pieces[SquareInfront].type == PieceType::Empty)
+                {
+                    moves.push_back(SquareInfront);
+
+                    int Square2Infront = p + (16 * direction);
+
+                    //Checks 2 squares infront if 1 square infront was clear and if its on either 2nd or 7th rank
+                    if (Square2Infront >= 0 && Square2Infront < 64)
+                    {
+                        if (Pieces[Square2Infront].type == PieceType::Empty && (floor(p / 8) == 1 || floor(p / 8) == 6))
+                        {
+                            moves.push_back(Square2Infront);
+                        }
+                    }
+                }
+            }
+
+            //Attacking diagonally right
+            int SquareDiagRight = p + (8 * direction) + 1;
+            if (Pieces[SquareDiagRight].type != PieceType::Empty)
+            {
+                if (SquareDiagRight < 64 && SquareDiagRight >= 0)
+                {
+                    //Checks infront and 1 square to the right
+                    if (Pieces[SquareDiagRight].isBlack != Pieces[p].isBlack)
+                    {
+                        // limit to edges of the board on ranks 1 and 8
+                        if (p % 8 != 7)
+                        {
+                            moves.push_back(SquareDiagRight);
+                        }
+                    }
+                }
+            }
+
+            //Attacking diagonally left
+            int SquareDiagLeft = p + (8 * direction) - 1;
+            if (Pieces[SquareDiagLeft].type != PieceType::Empty)
+            {
+                //Checks infront and 1 square to the left
+                if (Pieces[SquareDiagLeft].isBlack != Pieces[p].isBlack)
+                {
+                    if (SquareDiagLeft < 64 && SquareDiagLeft >= 0)
+                    {
+                        // limit to edges of the board on ranks 1 and 8
+                        if (p % 8 != 0)
+                        {
+                            moves.push_back(SquareDiagLeft);
+                        }
+                    }
+                }
+            }
+
+            //En passant diagonally right
+            if (SquareDiagRight == enPassant)
+            {
+                // limit to edges of the board on ranks 1 and 8
+                if (p % 8 != 7)
+                {
+                    moves.push_back(SquareDiagRight);
+                }
+            }
+
+            //En passant diagonally left
+            if (SquareDiagLeft == enPassant)
+            {
+                // limit to edges of the board on ranks 1 and 8
+                if (p % 8 != 0)
+                {
+                    moves.push_back(SquareDiagLeft);
+                }
+            }
+        }
+
+        if (Pieces[p].type == PieceType::Knight)
+        {
+            //2 up 1 left
+            int topLeft = p - 17;
+            if (topLeft >= 0 && topLeft < 64)
+            {
+                if (p % 8 != 0)
+                {
+                    if (Pieces[topLeft].type == PieceType::Empty || (Pieces[topLeft].type != Empty && Pieces[topLeft].isBlack != Pieces[p].isBlack))
+                    {
+                        moves.push_back(topLeft);
+                    }
+                }
+            }
+
+            //2 up 1 right
+            int topRight = p - 15;
+            if (topRight >= 0 && topRight < 64)
+            {
+                if (p % 8 != 7)
+                {
+                    if (Pieces[topRight].type == PieceType::Empty || (Pieces[topRight].type != Empty && Pieces[topRight].isBlack != Pieces[p].isBlack))
+                    {
+                        moves.push_back(topRight);
+                    }
+                }
+            }
+
+            //2 left 1 up
+            int leftTop = p - 10;
+            if (leftTop >= 0 && leftTop < 64)
+            {
+                if (p % 8 != 1 && p % 8 != 0)
+                {
+                    if (Pieces[leftTop].type == PieceType::Empty || (Pieces[leftTop].type != Empty && Pieces[leftTop].isBlack != Pieces[p].isBlack))
+                    {
+                        moves.push_back(leftTop);
+                    }
+                }
+            }
+
+            //2 left 1 down
+            int leftDown = p + 6;
+            if (leftDown >= 0 && leftDown < 64)
+            {
+                if (p % 8 != 1 && p % 8 != 0)
+                {
+                    if (Pieces[leftDown].type == PieceType::Empty || (Pieces[leftDown].type != Empty && Pieces[leftDown].isBlack != Pieces[p].isBlack))
+                    {
+                        moves.push_back(leftDown);
+                    }
+                }
+            }
+
+            //2 right 1 up
+            int rightUp = p - 6;
+            if (rightUp >= 0 && rightUp < 64)
+            {
+                if (p % 8 != 7 && p % 8 != 6)
+                {
+                    if (Pieces[rightUp].type == PieceType::Empty || (Pieces[rightUp].type != Empty && Pieces[rightUp].isBlack != Pieces[p].isBlack))
+                    {
+                        moves.push_back(rightUp);
+                    }
+                }
+            }
+
+            //2 right 1 down
+            int rightDown = p + 10;
+            if (rightDown >= 0 && rightDown < 64)
+            {
+                if (p % 8 != 7 && p % 8 != 6)
+                {
+                    if (Pieces[rightDown].type == PieceType::Empty || (Pieces[rightDown].type != Empty && Pieces[rightDown].isBlack != Pieces[p].isBlack))
+                    {
+                        moves.push_back(rightDown);
+                    }
+                }
+            }
+
+            //2 down 1 left
+            int downLeft = p + 15;
+            if (downLeft >= 0 && downLeft < 64)
+            {
+                if (p % 8 != 0)
+                {
+                    if (Pieces[downLeft].type == PieceType::Empty || (Pieces[downLeft].type != Empty && Pieces[downLeft].isBlack != Pieces[p].isBlack))
+                    {
+                        moves.push_back(downLeft);
+                    }
+                }
+            }
+
+            //2 down 1 right
+            int downRight = p + 17;
+            if (downRight >= 0 && downRight < 64)
+            {
+                if (p % 8 != 7)
+                {
+                    if (Pieces[downRight].type == PieceType::Empty || (Pieces[downRight].type != Empty && Pieces[downRight].isBlack != Pieces[p].isBlack))
+                    {
+                        moves.push_back(downRight);
+                    }
+                }
+            }
+        }
+
+        if (Pieces[p].type == PieceType::Bishop)
+        {
+            int topSquares = int(floor(p / 8) + 1);
+            int leftSquares = ((p % 8) + 1);
+            int bottomSquares = 8 - topSquares + 1;
+            int rightSquares = 8 - leftSquares + 1;
+
+            //Diag top left
+            int topLeftSquares = std::min(leftSquares, topSquares);
+            for (int i = 1; i < topLeftSquares; i++)
+            {
+                int topLeft = p - 9 * i;
+                if (Pieces[topLeft].type == PieceType::Empty)
+                {
+                    moves.push_back(topLeft);
+                }
+                else
+                {
+                    if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(topLeft);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Diag bottom left
+            int bottomLeftSquares = std::min(bottomSquares, leftSquares);
+            for (int i = 1; i < bottomLeftSquares; i++)
+            {
+                int bottomLeft = p + 7 * i;
+                if (Pieces[bottomLeft].type == PieceType::Empty)
+                {
+                    moves.push_back(bottomLeft);
+                }
+                else
+                {
+                    if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(bottomLeft);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Diag top right
+            int topRightSquares = std::min(topSquares, rightSquares);
+            for (int i = 1; i < topRightSquares; i++)
+            {
+                int topRight = p - 7 * i;
+                if (Pieces[topRight].type == PieceType::Empty)
+                {
+                    moves.push_back(topRight);
+                }
+                else
+                {
+                    if (Pieces[topRight].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(topRight);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Diag bottom right
+            int bottomRightSquares = std::min(bottomSquares, rightSquares);
+            for (int i = 1; i < bottomRightSquares; i++)
+            {
+                int bottomRight = p + 9 * i;
+                if (Pieces[bottomRight].type == PieceType::Empty)
+                {
+                    moves.push_back(bottomRight);
+                }
+                else
+                {
+                    if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(bottomRight);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (Pieces[p].type == PieceType::Rook)
+        {
+            //Left
+            int leftSquares = ((p % 8) + 1);
+            for (int i = 1; i < leftSquares; i++)
+            {
+                int left = p - 1 * i;
+                if (Pieces[left].type == PieceType::Empty)
+                {
+                    moves.push_back(left);
+                }
+                else
+                {
+                    if (Pieces[left].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(left);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Top
+            int topSquares = int(floor(p / 8) + 1);
+            for (int i = 1; i < topSquares; i++)
+            {
+                int top = p - 8 * i;
+                if (Pieces[top].type == PieceType::Empty)
+                {
+                    moves.push_back(top);
+                }
+                else
+                {
+                    if (Pieces[top].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(top);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Right
+            int rightSquares = 8 - leftSquares + 1;
+            for (int i = 1; i < rightSquares; i++)
+            {
+                int right = p + 1 * i;
+                if (Pieces[right].type == PieceType::Empty)
+                {
+                    moves.push_back(right);
+                }
+                else
+                {
+                    if (Pieces[right].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(right);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Bottom
+            int bottomSquares = 8 - topSquares + 1;
+            for (int i = 1; i < bottomSquares; i++)
+            {
+                int bottom = p + 8 * i;
+                if (Pieces[bottom].type == PieceType::Empty)
+                {
+                    moves.push_back(bottom);
+                }
+                else
+                {
+                    if (Pieces[bottom].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(bottom);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (Pieces[p].type == PieceType::Queen)
+        {
+            //Left
+            int leftSquares = ((p % 8) + 1);
+            for (int i = 1; i < leftSquares; i++)
+            {
+                int left = p - 1 * i;
+                if (Pieces[left].type == PieceType::Empty)
+                {
+                    moves.push_back(left);
+                }
+                else
+                {
+                    if (Pieces[left].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(left);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Top
+            int topSquares = int(floor(p / 8) + 1);
+            for (int i = 1; i < topSquares; i++)
+            {
+                int top = p - 8 * i;
+                if (Pieces[top].type == PieceType::Empty)
+                {
+                    moves.push_back(top);
+                }
+                else
+                {
+                    if (Pieces[top].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(top);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Right
+            int rightSquares = 8 - leftSquares + 1;
+            for (int i = 1; i < rightSquares; i++)
+            {
+                int right = p + 1 * i;
+                if (Pieces[right].type == PieceType::Empty)
+                {
+                    moves.push_back(right);
+                }
+                else
+                {
+                    if (Pieces[right].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(right);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Bottom
+            int bottomSquares = 8 - topSquares + 1;
+            for (int i = 1; i < bottomSquares; i++)
+            {
+                int bottom = p + 8 * i;
+                if (Pieces[bottom].type == PieceType::Empty)
+                {
+                    moves.push_back(bottom);
+                }
+                else
+                {
+                    if (Pieces[bottom].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(bottom);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Diag top left
+            int topLeftSquares = std::min(leftSquares, topSquares);
+            for (int i = 1; i < topLeftSquares; i++)
+            {
+                int topLeft = p - 9 * i;
+                if (Pieces[topLeft].type == PieceType::Empty)
+                {
+                    moves.push_back(topLeft);
+                }
+                else
+                {
+                    if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(topLeft);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Diag bottom left
+            int bottomLeftSquares = std::min(bottomSquares, leftSquares);
+            for (int i = 1; i < bottomLeftSquares; i++)
+            {
+                int bottomLeft = p + 7 * i;
+                if (Pieces[bottomLeft].type == PieceType::Empty)
+                {
+                    moves.push_back(bottomLeft);
+                }
+                else
+                {
+                    if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(bottomLeft);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Diag top right
+            int topRightSquares = std::min(topSquares, rightSquares);
+            for (int i = 1; i < topRightSquares; i++)
+            {
+                int topRight = p - 7 * i;
+                if (Pieces[topRight].type == PieceType::Empty)
+                {
+                    moves.push_back(topRight);
+                }
+                else
+                {
+                    if (Pieces[topRight].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(topRight);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            //Diag bottom right
+            int bottomRightSquares = std::min(bottomSquares, rightSquares);
+            for (int i = 1; i < bottomRightSquares; i++)
+            {
+                int bottomRight = p + 9 * i;
+                if (Pieces[bottomRight].type == PieceType::Empty)
+                {
+                    moves.push_back(bottomRight);
+                }
+                else
+                {
+                    if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(bottomRight);
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (Pieces[p].type == PieceType::King)
+        {
+            if (p % 8 != 0)
+            {
+                //Left
+                int left = p - 1;
+                if (Pieces[left].type == PieceType::Empty)
+                {
+                    moves.push_back(left);
+                }
+                else
+                {
+                    if (Pieces[left].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(left);
+                    }
+                }
+
+                //Diag top left
+                int topLeft = p - 9;
+                if (topLeft >= 0)
+                {
+                    if (Pieces[topLeft].type == PieceType::Empty)
+                    {
+                        moves.push_back(topLeft);
+                    }
+                    else
+                    {
+                        if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
+                        {
+                            moves.push_back(topLeft);
+                        }
+                    }
+                }
+
+                //Diag bottom left
+                int bottomLeft = p + 7;
+                if (bottomLeft < 64)
+                {
+                    if (Pieces[bottomLeft].type == PieceType::Empty)
+                    {
+                        moves.push_back(bottomLeft);
+                    }
+                    else
+                    {
+                        if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
+                        {
+                            moves.push_back(bottomLeft);
+                        }
+                    }
+                }
+            }
+
+            //Top
+            int top = p - 8;
+            if (top >= 0)
+            {
+                if (Pieces[top].type == PieceType::Empty)
+                {
+                    moves.push_back(top);
+                }
+                else
+                {
+                    if (Pieces[top].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(top);
+                    }
+                }
+            }
+
+            //Bottom
+            int bottom = p + 8;
+            if (bottom < 64)
+            {
+                if (Pieces[bottom].type == PieceType::Empty)
+                {
+                    moves.push_back(bottom);
+                }
+                else
+                {
+                    if (Pieces[bottom].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(bottom);
+                    }
+                }
+            }
+
+            if (p % 8 != 7)
+            {
+                //Right
+                int right = p + 1;
+                if (Pieces[right].type == PieceType::Empty)
+                {
+                    moves.push_back(right);
+                }
+                else
+                {
+                    if (Pieces[right].isBlack != Pieces[p].isBlack)
+                    {
+                        moves.push_back(right);
+                    }
+                }
+
+                //Diag top right
+                int topRight = p - 7;
+
+                if (topRight >= 0)
+                {
+                    if (Pieces[topRight].type == PieceType::Empty)
+                    {
+                        moves.push_back(topRight);
+                    }
+                    else
+                    {
+                        if (Pieces[topRight].isBlack != Pieces[p].isBlack)
+                        {
+                            moves.push_back(topRight);
+                        }
+                    }
+                }
+
+                //Diag bottom right
+                int bottomRight = p + 9;
+                if (bottomRight < 64)
+                {
+                    if (Pieces[bottomRight].type == PieceType::Empty)
+                    {
+                        moves.push_back(bottomRight);
+                    }
+                    else
+                    {
+                        if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
+                        {
+                            moves.push_back(bottomRight);
+                        }
+                    }
+                }
+            }
+        }
+
+        /*std::cout << "type " << Pieces[p].type << std::endl;
+        for (int i = 0; i < moves.size(); i++)
+        {
+            std::cout << moves[i] << std::endl;
+        }*/
+        return moves;
+    }
+
+    std::vector<int> legalMoves(int p)
     {
         std::vector<int> moves;
 
@@ -796,7 +1583,7 @@ struct Board
         return attackMap;
     }
 
-    std::vector<int> checkMap;
+    
 
     bool inCheck(int p, bool isBlack)
     {
@@ -1269,11 +2056,11 @@ int main()
 
             if (board.inCheck(board.wKing, false))
             {
-                std::cout << "your in check, mate" << std::endl;
+                std::cout << "your in check" << std::endl;
             }
             else
             {
-                std::cout << "your not in check, mate" << std::endl;
+                std::cout << "your not in check" << std::endl;
             }
 
             if (x < 8 && y < 8)
