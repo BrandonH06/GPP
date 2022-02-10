@@ -1,1 +1,47 @@
-﻿  Project4.vcxproj -> C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Release\Project4.exe
+﻿  main.cpp
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(58,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(128,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(149,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(180,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1246,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1251,35): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1298,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1333,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1368,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1403,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1438,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1473,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1508,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(1543,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2075,51): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2136,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2200,47): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2260,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2304,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2348,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2392,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2436,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2489,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2502,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2518,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2529,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2558,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2569,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2718,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2720,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2731,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2733,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2746,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2778,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2825,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2826,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2910,39): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2971,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(2972,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(3015,72): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Project4\main.cpp(3015,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  Generating code
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+  All 506 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Project4.vcxproj -> C:\Users\Nosdu\Desktop\Games Programming Project\Project4 - Copy\Release\Project4.exe
