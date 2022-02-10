@@ -54,6 +54,8 @@ struct Board
 
     void loadPosition(std::string fen)
     {
+        //add the move counter stuff for 50 move rule ect
+
         int temp = 0;
         for (int i = 0; i < fen.length(); i++)
         {
@@ -226,6 +228,14 @@ struct Board
                     {
                         moves.push_back(SquareInfront);
 
+                        //if moving to either the first rank or eighth rank
+                        if ((floor(SquareInfront / 8) == 0 || floor(SquareInfront / 8) == 7) && !ignoreKing)
+                        {
+                            moves.push_back(SquareInfront + (8 * direction * 1));
+                            moves.push_back(SquareInfront + (8 * direction * 2));
+                            moves.push_back(SquareInfront + (8 * direction * 3));
+                        }
+
                         int Square2Infront = p + (16 * direction);
 
                         //Checks 2 squares infront if 1 square infront was clear and if its on either 2nd or 7th rank
@@ -240,8 +250,6 @@ struct Board
                 }
             }
 
-            
-
             //Attacking diagonally right
             int SquareDiagRight = p + (8 * direction) + 1;
             if (Pieces[SquareDiagRight].type != PieceType::Empty)
@@ -255,6 +263,14 @@ struct Board
                         if (p % 8 != 7)
                         {
                             moves.push_back(SquareDiagRight);
+
+                            //if moving to either the first rank or eighth rank
+                            if ((floor(SquareDiagRight / 8) == 0 || floor(SquareDiagRight / 8) == 7) && !ignoreKing)
+                            {
+                                moves.push_back(SquareDiagRight + (8 * direction * 1));
+                                moves.push_back(SquareDiagRight + (8 * direction * 2));
+                                moves.push_back(SquareDiagRight + (8 * direction * 3));
+                            }
                         }
                     }
                 }
@@ -273,6 +289,14 @@ struct Board
                         if (p % 8 != 0)
                         {
                             moves.push_back(SquareDiagLeft);
+
+                            //if moving to either the first rank or eighth rank
+                            if ((floor(SquareDiagLeft / 8) == 0 || floor(SquareDiagLeft / 8) == 7) && !ignoreKing)
+                            {
+                                moves.push_back(SquareDiagLeft + (8 * direction * 1));
+                                moves.push_back(SquareDiagLeft + (8 * direction * 2));
+                                moves.push_back(SquareDiagLeft + (8 * direction * 3));
+                            }
                         }
                     }
                 }
@@ -291,7 +315,6 @@ struct Board
                     moves.push_back(SquareDiagLeft);
                 }
             }
-
 
             //En passant diagonally right
             if (SquareDiagRight == enPassant)
@@ -2601,6 +2624,50 @@ struct Board
 
     void Move(int from, int to)
     {
+        //white promoting
+        if (Pieces[from].type == PieceType::Pawn &&  to < 8)
+        {
+            if (to >= 0)
+            {
+                Pieces[from] = Piece(PieceType::Queen, Pieces[from].isBlack);
+            }
+            else if (to >= -9)
+            {
+                Pieces[from] = Piece(PieceType::Knight, Pieces[from].isBlack);
+            }
+            else if (to >= -17)
+            {
+                Pieces[from] = Piece(PieceType::Rook, Pieces[from].isBlack);
+            }
+            else if (to >= -25)
+            {
+                Pieces[from] = Piece(PieceType::Bishop, Pieces[from].isBlack);
+            }
+            to = to % 8;
+        }
+
+        //black promoting
+        if (Pieces[from].type == PieceType::Pawn && to > 55)
+        {
+            if (to <= 63)
+            {
+                Pieces[from] = Piece(PieceType::Queen, Pieces[from].isBlack);
+            }
+            else if (to <= 71)
+            {
+                Pieces[from] = Piece(PieceType::Knight, Pieces[from].isBlack);
+            }
+            else if (to <= 79)
+            {
+                Pieces[from] = Piece(PieceType::Rook, Pieces[from].isBlack);
+            }
+            else if (to <= 87)
+            {
+                Pieces[from] = Piece(PieceType::Bishop, Pieces[from].isBlack);
+            }
+            to = (to % 8) + 56;
+        }
+
         //Move rook if castling
         if (from == 60 && to == 62 && Pieces[from].type == PieceType::King)
         {
@@ -2783,7 +2850,7 @@ int main()
     Board board;
 
     //board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    board.loadPosition("rnbqkbnr/pp1p1p1p/8/3PpPp1/8/1p2P2P/P1P3PR/RNBQKBN1 w - g6 0 11");
+    board.loadPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ");
 
     bool prevlClick = false;
 
@@ -2791,7 +2858,6 @@ int main()
 
     std::vector<int> posMoves;
     bool lClick = false;
-
 
     for (int i = 0; i < 4; i++)
     {
