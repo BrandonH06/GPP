@@ -37,6 +37,8 @@ struct Piece
 
 struct Board
 {
+    std::vector<float> pVal = { 0.0f, 1.0f, 3.0f, 3.0f, 5.0f, 9.0f, 1000.0f };
+
     std::vector<Piece> Pieces;
     int enPassant = -10;
 
@@ -2315,6 +2317,24 @@ struct Board
         return PinMap;
     }
 
+    float evaluate()
+    {
+        float eval = 0.0f;
+        for (int i = 0; i < Pieces.size(); i++)
+        {
+            if (Pieces[i].isBlack)
+            {
+                eval += pVal[Pieces[i].type] * -1;
+            }
+            else
+            {
+                eval += pVal[Pieces[i].type];
+            }
+            
+        }
+        return eval;
+    }
+
     std::vector<std::vector<int>> LegalMoves(bool isBlack)
     {
         std::vector<std::vector<int>> legalMoves(64, std::vector<int>());
@@ -2706,9 +2726,9 @@ int main()
 
     Board board;
 
-    //board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-    board.loadPosition("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 1");
+    //board.loadPosition("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 1");
 
     bool prevlClick = false; 
 
@@ -2717,7 +2737,7 @@ int main()
     std::vector<int> posMoves;
     bool lClick = false;
 
-    for (int i = 0; i < 4; i++)
+    /*for (int i = 0; i < 4; i++)
     {
         auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -2728,7 +2748,7 @@ int main()
         std::chrono::duration<double, std::milli> ms_double = t2 - t1;
 
         std::cout << " in " << ms_double.count() << "ms\n";
-    }
+    }*/
 
     while (app.isOpen())
     {
@@ -2817,14 +2837,15 @@ int main()
                 //e5 off by 2 
 
 
-            std::cout << perft(board, 1) << " moves" << std::endl;
-            
+            //std::cout << perft(board, 1) << " moves" << std::endl;
+
+
             //board.loadPosition("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
             //262 more
                 //h1g1 46 more
                     //e8c8 46 more
                     
-
+            std::cout << "eval: "<< std::to_string(board.evaluate()) << std::endl;
 
 
             if (x < 8 && y < 8)
@@ -2870,23 +2891,60 @@ int main()
         }
 
         //Random move bot
-        /*if (board.blackTurn)
+        if (board.blackTurn)
         {
             std::vector<std::vector<int>> allMoves = board.LegalMoves(board.blackTurn);
-            int rand1 = rand() % allMoves.size();
+            std::cout << "qawodq";
+            bool hasMoves = false;
 
-            while (allMoves[rand1].size() <= 0)
+            for (int i = 0; i < allMoves.size(); i++)
             {
-                rand1 = rand() % allMoves.size();
+                if (allMoves[i].size() > 0)
+                {
+                    hasMoves = true;
+                    //std::cout << "has moves" << std::endl;
+                    break;
+                }
             }
-            //std::cout << rand1 << " has a size of " << allMoves[rand1].size() << std::endl;
             
+            if (hasMoves)
+            {
+                int rand1 = rand() % allMoves.size();
 
-            int rand2 = rand() % allMoves[rand1].size();
+                while (allMoves[rand1].size() <= 0)
+                {
+                    rand1 = rand() % allMoves.size();
+                }
+                //std::cout << rand1 << " has a size of " << allMoves[rand1].size() << std::endl;
 
-            std::cout << rand1 << " : " << rand2 << std::endl;
-            board.Move(rand1, allMoves[rand1][rand2]);
-        }*/
+
+                int rand2 = rand() % allMoves[rand1].size();
+
+                std::cout << rand1 << " : " << rand2 << std::endl;
+                board.Move(rand1, allMoves[rand1][rand2]);
+            }
+            else
+            {
+                int k;
+                if (board.blackTurn)
+                {
+                    k = board.bKing;
+                }
+                else
+                {
+                    k = board.wKing;
+                }
+
+                if (board.inCheck(k, board.blackTurn))
+                {
+                    std::cout << "Checkmate" << std::endl;
+                }
+                else
+                {
+                    std::cout << "Stalemate" << std::endl;
+                }
+            }
+        }
 
         prevlClick = lClick;
 
