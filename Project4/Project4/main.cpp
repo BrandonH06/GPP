@@ -2330,7 +2330,14 @@ struct Board
             {
                 eval += pVal[Pieces[i].type];
             }
-            
+        }
+        if (blackTurn)
+        {
+            return eval * -1;
+        }
+        else
+        {
+            return eval;
         }
         return eval;
     }
@@ -2685,6 +2692,65 @@ int perft(Board b, int depth)
     return count;
 }
 
+float ABMin(float alpha, float beta, int depth, Board board);
+
+float ABMax(float alpha, float beta, int depth, Board board)
+{
+    if (depth == 0)
+    {
+        return board.evaluate();
+    }
+    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
+    int score;
+    for (int i = 0; i < moves.size(); i++)
+    {
+        for (int j = 0; j < moves[i].size(); j++)
+        {
+            Board b = board;
+            b.Move(i, moves[i][j]);
+
+            score = ABMin(alpha, beta, depth - 1, b);
+            if (score >= beta)
+            {
+                return beta;
+            }
+            if (score > alpha)
+            {
+                return score;
+            }
+        }
+
+    }
+    return alpha;
+}
+float ABMin(float alpha, float beta, int depth, Board board)
+{
+    if (depth == 0)
+    {
+        return -board.evaluate();
+    }
+    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
+    int score;
+    for (int i = 0; i < moves.size(); i++)
+    {
+        for (int j = 0; j < moves[i].size(); j++)
+        {
+            Board b = board;
+            b.Move(i, moves[i][j]);
+            score = ABMax(alpha, beta, depth - 1, b);
+            if (score <= alpha)
+            {
+                return alpha;
+            }
+            if (score < beta)
+            {
+                beta = score;
+            }
+        }
+    }
+    return beta;
+}
+
 int main()
 {
     srand(time(0));
@@ -2894,7 +2960,7 @@ int main()
         if (board.blackTurn)
         {
             std::vector<std::vector<int>> allMoves = board.LegalMoves(board.blackTurn);
-            std::cout << "qawodq";
+
             bool hasMoves = false;
 
             for (int i = 0; i < allMoves.size(); i++)
@@ -2902,26 +2968,42 @@ int main()
                 if (allMoves[i].size() > 0)
                 {
                     hasMoves = true;
-                    //std::cout << "has moves" << std::endl;
                     break;
                 }
             }
             
             if (hasMoves)
             {
-                int rand1 = rand() % allMoves.size();
+                int bestMoveA;
+                int bestMoveB;
+                float bestMoveE = -1000000.0f;
+
+                for (int i = 0; i < allMoves.size(); i++)
+                {
+                    for (int j = 0; j < allMoves[i].size(); j++)
+                    {
+                        Board b = board;
+                        b.Move(i, allMoves[i][j]);
+                        if (ABMin(-100000.0f, 100000.0f, 3, b) > bestMoveE)
+                        {
+                            bestMoveA = i;
+                            bestMoveB = allMoves[i][j];
+                        }
+                    }
+                }
+                board.Move(bestMoveA, bestMoveB);
+
+
+                /*int rand1 = rand() % allMoves.size();
 
                 while (allMoves[rand1].size() <= 0)
                 {
                     rand1 = rand() % allMoves.size();
                 }
-                //std::cout << rand1 << " has a size of " << allMoves[rand1].size() << std::endl;
 
+                int rand2 = rand() % allMoves[rand1].size();*/
 
-                int rand2 = rand() % allMoves[rand1].size();
-
-                std::cout << rand1 << " : " << rand2 << std::endl;
-                board.Move(rand1, allMoves[rand1][rand2]);
+                //board.Move(rand1, allMoves[rand1][rand2]);
             }
             else
             {
@@ -2967,12 +3049,10 @@ int main()
                 if (i == selectedSquare)
                 {
                     s.setFillColor(Color(157, 215, 213, 255));
-                    
                 }
                 else if (std::find(posMoves.begin(), posMoves.end(), i) != posMoves.end())
                 {
                     s.setFillColor(Color(133, 243, 124, 255));
-                    
                 }
                 else
                 {

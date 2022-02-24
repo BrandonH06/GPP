@@ -1,1 +1,58 @@
-﻿LINK : fatal error LNK1104: cannot open file 'C:\Users\v8101058\Source\New folder\Project4\Release\Project4.exe'
+﻿  main.cpp
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(62,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(134,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(155,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(186,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1273,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1279,35): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1326,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1361,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1396,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1431,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1466,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1501,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1536,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1571,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1846,51): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1907,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1978,51): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2118,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2162,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2206,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2250,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2294,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2323,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2372,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2385,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2401,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2412,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2453,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2464,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2674,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2683,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2685,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2705,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2707,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2712,26): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2719,24): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2734,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2736,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2740,26): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2747,24): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2756,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2788,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2835,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2836,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2928,39): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2966,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2981,35): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2983,39): warning C4018: '<': signed/unsigned mismatch
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(3042,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(3043,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(3084,72): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(3084,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+  Generating code
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+  All 578 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Project4.vcxproj -> C:\Users\v8101058\Source\New folder\Project4\Release\Project4.exe
