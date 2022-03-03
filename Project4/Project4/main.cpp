@@ -212,7 +212,14 @@ struct Board
     {
         std::vector<int> moves;
 
-        if (Pieces[p].type == PieceType::Pawn)
+        //max 21 moves per piece
+        //max 20 pieces
+
+        if (Pieces[p].type == PieceType::Empty)
+        {
+            return moves;
+        }
+        else if (Pieces[p].type == PieceType::Pawn)
         {
             int direction = -1;
             if (Pieces[p].isBlack)
@@ -339,7 +346,7 @@ struct Board
             }
         }
 
-        if (Pieces[p].type == PieceType::Knight)
+        else if (Pieces[p].type == PieceType::Knight)
         {
             //2 up 1 left
             int topLeft = p - 17;
@@ -502,7 +509,7 @@ struct Board
             }
         }
 
-        if (Pieces[p].type == PieceType::Bishop)
+        else if (Pieces[p].type == PieceType::Bishop)
         {
             int topSquares = int(floor(p / 8) + 1);
             int leftSquares = ((p % 8) + 1);
@@ -651,7 +658,7 @@ struct Board
             }
         }
 
-        if (Pieces[p].type == PieceType::Rook)
+        else if (Pieces[p].type == PieceType::Rook)
         {
             //Left
             int leftSquares = ((p % 8) + 1);
@@ -794,7 +801,7 @@ struct Board
             }
         }
 
-        if (Pieces[p].type == PieceType::Queen)
+        else if (Pieces[p].type == PieceType::Queen)
         {
             //Left
             int leftSquares = ((p % 8) + 1);
@@ -1077,7 +1084,7 @@ struct Board
             }
         }
 
-        if (Pieces[p].type == PieceType::King)
+        else if (Pieces[p].type == PieceType::King)
         {
             if (p % 8 != 0)
             {
@@ -1222,7 +1229,7 @@ struct Board
                 {
                     if (bKCastle)
                     {
-                        if (!(inCheck(4, true) || inCheck(5, true) || inCheck(6, true)) && !(Pieces[5].type != PieceType::Empty || Pieces[6].type != PieceType::Empty))
+                        if ((Pieces[5].type == PieceType::Empty && Pieces[6].type == PieceType::Empty) && !(inCheck(4, true) || inCheck(5, true) || inCheck(6, true)))
                         {
                             moves.push_back(6);
                         }
@@ -1232,7 +1239,7 @@ struct Board
                 {
                     if (bQCastle)
                     {
-                        if (!(inCheck(4, true) || inCheck(3, true) || inCheck(2, true)) && !(Pieces[3].type != PieceType::Empty || Pieces[2].type != PieceType::Empty || Pieces[1].type != PieceType::Empty))
+                        if ((Pieces[3].type == PieceType::Empty && Pieces[2].type == PieceType::Empty && Pieces[1].type == PieceType::Empty) && !(inCheck(4, true) || inCheck(3, true) || inCheck(2, true)))
                         {
                             moves.push_back(2);
                         }
@@ -1243,7 +1250,7 @@ struct Board
                 {
                     if (wKCastle)
                     {
-                        if (!(inCheck(60, false) || inCheck(61, false) || inCheck(62, false)) && !(Pieces[61].type != PieceType::Empty || Pieces[62].type != PieceType::Empty))
+                        if ((Pieces[61].type == PieceType::Empty && Pieces[62].type == PieceType::Empty) && !(inCheck(60, false) || inCheck(61, false) || inCheck(62, false)))
                         {
                             moves.push_back(62);
                         }
@@ -1254,7 +1261,7 @@ struct Board
                 {
                     if (wQCastle)
                     {
-                        if (!(inCheck(60, false) || inCheck(59, false) || inCheck(58, false)) && !(Pieces[59].type != PieceType::Empty || Pieces[58].type != PieceType::Empty || Pieces[57].type != PieceType::Empty))
+                        if ((Pieces[59].type == PieceType::Empty && Pieces[58].type == PieceType::Empty && Pieces[57].type == PieceType::Empty) && !(inCheck(60, false) || inCheck(59, false) || inCheck(58, false)))
                         {
                             moves.push_back(58);
                         }
@@ -1262,6 +1269,7 @@ struct Board
                 }
             }
         }
+
         return moves;
     }
 
@@ -2329,14 +2337,6 @@ struct Board
                 eval += pVal[Pieces[i].type];
             }
         }
-        /*if (blackTurn)
-        {
-            return eval * -1;
-        }
-        else
-        {
-            return eval;
-        }*/
         return eval;
     }
 
@@ -2755,79 +2755,79 @@ float Minimax(float alpha, float beta, int depth, Board board)
 }
 
 
-float ABMin(float alpha, float beta, int depth, Board board);
-
-float ABMax(float alpha, float beta, int depth, Board board)
-{
-    if (depth == 0)
-    {
-        if (board.blackTurn)
-        {
-            return board.evaluate() * -1;
-        }
-        else
-        {
-            return board.evaluate();
-        }
-        
-    }
-    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
-    int score;
-    for (int i = 0; i < moves.size(); i++)
-    {
-        for (int j = 0; j < moves[i].size(); j++)
-        {
-            Board b = board;
-            b.Move(i, moves[i][j]);
-
-            score = ABMin(alpha, beta, depth - 1, b);
-            if (score >= beta)
-            {
-                return beta;
-            }
-            if (score > alpha)
-            {
-                return score;
-            }
-        }
-
-    }
-    return alpha;
-}
-float ABMin(float alpha, float beta, int depth, Board board)
-{
-    if (depth == 0)
-    {
-        if (board.blackTurn)
-        {
-            return board.evaluate() * -1;
-        }
-        else
-        {
-            return board.evaluate();
-        }
-    }
-    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
-    int score;
-    for (int i = 0; i < moves.size(); i++)
-    {
-        for (int j = 0; j < moves[i].size(); j++)
-        {
-            Board b = board;
-            b.Move(i, moves[i][j]);
-            score = ABMax(alpha, beta, depth - 1, b);
-            if (score <= alpha)
-            {
-                return alpha;
-            }
-            if (score < beta)
-            {
-                beta = score;
-            }
-        }
-    }
-    return beta;
-}
+//float ABMin(float alpha, float beta, int depth, Board board);
+//
+//float ABMax(float alpha, float beta, int depth, Board board)
+//{
+//    if (depth == 0)
+//    {
+//        if (board.blackTurn)
+//        {
+//            return board.evaluate() * -1;
+//        }
+//        else
+//        {
+//            return board.evaluate();
+//        }
+//        
+//    }
+//    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
+//    int score;
+//    for (int i = 0; i < moves.size(); i++)
+//    {
+//        for (int j = 0; j < moves[i].size(); j++)
+//        {
+//            Board b = board;
+//            b.Move(i, moves[i][j]);
+//
+//            score = ABMin(alpha, beta, depth - 1, b);
+//            if (score >= beta)
+//            {
+//                return beta;
+//            }
+//            if (score > alpha)
+//            {
+//                return score;
+//            }
+//        }
+//
+//    }
+//    return alpha;
+//}
+//float ABMin(float alpha, float beta, int depth, Board board)
+//{
+//    if (depth == 0)
+//    {
+//        if (board.blackTurn)
+//        {
+//            return board.evaluate() * -1;
+//        }
+//        else
+//        {
+//            return board.evaluate();
+//        }
+//    }
+//    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
+//    int score;
+//    for (int i = 0; i < moves.size(); i++)
+//    {
+//        for (int j = 0; j < moves[i].size(); j++)
+//        {
+//            Board b = board;
+//            b.Move(i, moves[i][j]);
+//            score = ABMax(alpha, beta, depth - 1, b);
+//            if (score <= alpha)
+//            {
+//                return alpha;
+//            }
+//            if (score < beta)
+//            {
+//                beta = score;
+//            }
+//        }
+//    }
+//    return beta;
+//}
 
 int main()
 {
@@ -2881,7 +2881,7 @@ int main()
     std::vector<int> posMoves;
     bool lClick = false;
 
-    /*for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++)
     {
         auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -2892,7 +2892,7 @@ int main()
         std::chrono::duration<double, std::milli> ms_double = t2 - t1;
 
         std::cout << " in " << ms_double.count() << "ms\n";
-    }*/
+    }
 
     while (app.isOpen())
     {
@@ -2930,6 +2930,8 @@ int main()
                 int bestMoveB;
                 float bestMoveE = INFINITY;
 
+                auto t1 = std::chrono::high_resolution_clock::now();
+
                 for (int i = 0; i < allMoves.size(); i++)
                 {
                     for (int j = 0; j < allMoves[i].size(); j++)
@@ -2951,7 +2953,12 @@ int main()
                         }
                     }
                 }
-                std::cout << "played move " << bestMoveA << " to " << bestMoveB << std::endl;
+
+                auto t2 = std::chrono::high_resolution_clock::now();
+
+                std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+
+                std::cout << "played move " << bestMoveA << " to " << bestMoveB << " in " << ms_double.count() << "ms\n";
                 board.Move(bestMoveA, bestMoveB);
 
 
