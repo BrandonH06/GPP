@@ -194,12 +194,10 @@ struct Board
             {
                 
                 epSquare = 8 - (fen[i] - 'a');
-                std::cout << "find lewtter in enpassant " << fen[i] << " " << epSquare << std::endl;
             }
             else
             {
                 epSquare += 8 * (fen[i] - '1');
-                std::cout << "find num in enpassant " << fen[i] << " " << epSquare << std::endl;
             }
         }
         if (epSquare >= 0)
@@ -2331,14 +2329,14 @@ struct Board
                 eval += pVal[Pieces[i].type];
             }
         }
-        if (blackTurn)
+        /*if (blackTurn)
         {
             return eval * -1;
         }
         else
         {
             return eval;
-        }
+        }*/
         return eval;
     }
 
@@ -2692,13 +2690,86 @@ int perft(Board b, int depth)
     return count;
 }
 
+float Minimax(float alpha, float beta, int depth, Board board)
+{
+    if (depth == 0)
+    {
+        return board.evaluate();
+    }
+    float maxEval = -INFINITY;
+    float minEval = INFINITY;
+
+    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
+    
+    if (!board.blackTurn)
+    {
+        //std::cout << "white turn" << std::endl;
+        for (int i = 0; i < moves.size(); i++)
+        {
+            for (int j = 0; j < moves[i].size(); j++)
+            {
+                Board b = board;
+                b.Move(i, moves[i][j]);
+                float eval = Minimax(alpha, beta, depth - 1, b);
+                if (maxEval < eval)
+                {
+                    //std::cout << "updated thing to " << std::to_string(eval) << " from " << std::to_string(maxEval) << std::endl;
+                }
+                maxEval = std::max(maxEval, eval);
+                //std::cout << std::to_string(maxEval);
+
+                alpha = std::max(alpha, eval);
+                if (beta <= alpha)
+                {
+                    break;
+                }
+                
+            }
+        }
+        return maxEval;
+    }
+    else
+    {
+        //std::cout << "black turn" << std::endl;
+        for (int i = 0; i < moves.size(); i++)
+        {
+            for (int j = 0; j < moves[i].size(); j++)
+            {
+                Board b = board;
+                b.Move(i, moves[i][j]);
+                float eval = Minimax(alpha, beta, depth - 1, b);
+                if (minEval > eval)
+                {
+                    //std::cout << "updated thing to " << std::to_string(eval) << std::endl;
+                }
+                minEval = std::min(minEval, eval);
+                alpha = std::min(beta, eval);
+                if (beta <= alpha)
+                {
+                    break;
+                }
+            }
+        }
+        return minEval;
+    }
+}
+
+
 float ABMin(float alpha, float beta, int depth, Board board);
 
 float ABMax(float alpha, float beta, int depth, Board board)
 {
     if (depth == 0)
     {
-        return board.evaluate();
+        if (board.blackTurn)
+        {
+            return board.evaluate() * -1;
+        }
+        else
+        {
+            return board.evaluate();
+        }
+        
     }
     std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
     int score;
@@ -2727,7 +2798,14 @@ float ABMin(float alpha, float beta, int depth, Board board)
 {
     if (depth == 0)
     {
-        return -board.evaluate();
+        if (board.blackTurn)
+        {
+            return board.evaluate() * -1;
+        }
+        else
+        {
+            return board.evaluate();
+        }
     }
     std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
     int score;
@@ -2830,6 +2908,89 @@ int main()
             lClick = sf::Mouse::isButtonPressed(sf::Mouse::Left);
         }
 
+        //Random move bot
+        if (board.blackTurn)
+        {
+            std::vector<std::vector<int>> allMoves = board.LegalMoves(board.blackTurn);
+
+            bool hasMoves = false;
+
+            for (int i = 0; i < allMoves.size(); i++)
+            {
+                if (allMoves[i].size() > 0)
+                {
+                    hasMoves = true;
+                    break;
+                }
+            }
+
+            if (hasMoves)
+            {
+                int bestMoveA;
+                int bestMoveB;
+                float bestMoveE = INFINITY;
+
+                for (int i = 0; i < allMoves.size(); i++)
+                {
+                    for (int j = 0; j < allMoves[i].size(); j++)
+                    {
+                        /*if (i == 0 && j == 0)
+                        {
+                            std::cout << "updated to first possible move" << std::endl;
+                            bestMoveA = i;
+                            bestMoveB = allMoves[i][j];
+                        }*/
+                        Board b = board;
+                        b.Move(i, allMoves[i][j]);
+                        float temp = Minimax(-INFINITY, INFINITY, 3, b);
+                        if (temp <= bestMoveE)
+                        {
+                            bestMoveA = i;
+                            bestMoveB = allMoves[i][j];
+                            bestMoveE = temp;
+                        }
+                    }
+                }
+                std::cout << "played move " << bestMoveA << " to " << bestMoveB << std::endl;
+                board.Move(bestMoveA, bestMoveB);
+
+
+                /*int rand1 = rand() % allMoves.size();
+
+                while (allMoves[rand1].size() <= 0)
+                {
+                    rand1 = rand() % allMoves.size();
+                }
+
+                int rand2 = rand() % allMoves[rand1].size();*/
+
+                //board.Move(rand1, allMoves[rand1][rand2]);
+            }
+            else
+            {
+                int k;
+                if (board.blackTurn)
+                {
+                    k = board.bKing;
+                }
+                else
+                {
+                    k = board.wKing;
+                }
+
+                if (board.inCheck(k, board.blackTurn))
+                {
+                    std::cout << "Checkmate" << std::endl;
+                }
+                else
+                {
+                    std::cout << "Stalemate" << std::endl;
+                }
+            }
+        }
+
+
+
         if (lClick != prevlClick && lClick)
         {
             int x = floor(sf::Mouse::getPosition(app).x / 64);
@@ -2911,7 +3072,7 @@ int main()
                 //h1g1 46 more
                     //e8c8 46 more
                     
-            std::cout << "eval: "<< std::to_string(board.evaluate()) << std::endl;
+            //std::cout << "eval: "<< std::to_string(board.evaluate()) << std::endl;
 
 
             if (x < 8 && y < 8)
@@ -2956,77 +3117,7 @@ int main()
             }
         }
 
-        //Random move bot
-        if (board.blackTurn)
-        {
-            std::vector<std::vector<int>> allMoves = board.LegalMoves(board.blackTurn);
-
-            bool hasMoves = false;
-
-            for (int i = 0; i < allMoves.size(); i++)
-            {
-                if (allMoves[i].size() > 0)
-                {
-                    hasMoves = true;
-                    break;
-                }
-            }
-            
-            if (hasMoves)
-            {
-                int bestMoveA;
-                int bestMoveB;
-                float bestMoveE = -1000000.0f;
-
-                for (int i = 0; i < allMoves.size(); i++)
-                {
-                    for (int j = 0; j < allMoves[i].size(); j++)
-                    {
-                        Board b = board;
-                        b.Move(i, allMoves[i][j]);
-                        if (ABMin(-100000.0f, 100000.0f, 3, b) > bestMoveE)
-                        {
-                            bestMoveA = i;
-                            bestMoveB = allMoves[i][j];
-                        }
-                    }
-                }
-                board.Move(bestMoveA, bestMoveB);
-
-
-                /*int rand1 = rand() % allMoves.size();
-
-                while (allMoves[rand1].size() <= 0)
-                {
-                    rand1 = rand() % allMoves.size();
-                }
-
-                int rand2 = rand() % allMoves[rand1].size();*/
-
-                //board.Move(rand1, allMoves[rand1][rand2]);
-            }
-            else
-            {
-                int k;
-                if (board.blackTurn)
-                {
-                    k = board.bKing;
-                }
-                else
-                {
-                    k = board.wKing;
-                }
-
-                if (board.inCheck(k, board.blackTurn))
-                {
-                    std::cout << "Checkmate" << std::endl;
-                }
-                else
-                {
-                    std::cout << "Stalemate" << std::endl;
-                }
-            }
-        }
+        
 
         prevlClick = lClick;
 

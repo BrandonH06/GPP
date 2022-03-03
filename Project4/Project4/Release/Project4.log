@@ -1,58 +1,63 @@
 ﻿  main.cpp
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(62,27): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(134,34): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(155,34): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(186,34): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1273,27): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1279,35): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1326,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1361,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1396,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1431,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1466,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1501,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1536,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1571,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1846,51): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1907,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(1978,51): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2118,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2162,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2206,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2250,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2294,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2323,27): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2372,27): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2385,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2401,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2412,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2453,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2464,43): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2674,27): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2683,23): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2685,27): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2705,23): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2707,27): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2712,26): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2719,24): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2734,23): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2736,27): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2740,26): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2747,24): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2756,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2788,23): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2835,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2836,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2928,39): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2966,31): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2981,35): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(2983,39): warning C4018: '<': signed/unsigned mismatch
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(3042,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(3043,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(3084,72): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\v8101058\Source\New folder\Project4\Project4\main.cpp(3084,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(62,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(134,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(155,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(186,34): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1271,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1277,35): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1324,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1359,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1394,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1429,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1464,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1499,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1534,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1569,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1844,51): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1905,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(1976,51): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2116,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2160,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2204,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2248,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2292,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2321,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2370,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2383,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2399,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2410,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2451,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2462,43): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2672,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2681,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2683,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2707,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2709,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2734,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2736,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2776,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2778,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2783,26): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2790,24): warning C4244: 'return': conversion from 'int' to 'float', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2812,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2814,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2818,26): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2825,24): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2834,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2866,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2918,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2933,35): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2935,39): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2996,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(2997,19): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(3089,39): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(3133,21): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(3134,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(3175,72): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Project4\main.cpp(3175,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   Generating code
-  Previous IPDB and IOBJ mismatch, fall back to full compilation.
-  All 578 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  1 of 550 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    2 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  Project4.vcxproj -> C:\Users\v8101058\Source\New folder\Project4\Release\Project4.exe
+  Project4.vcxproj -> C:\Users\Nosdu\Documents\GitHub\GPP\Project4\Release\Project4.exe
