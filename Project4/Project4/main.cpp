@@ -2,6 +2,8 @@
 #include <SFML/Network.hpp>
 #include <iostream>
 #include <chrono>
+#include <unordered_map>
+#include <random>
 
 using namespace sf;
 
@@ -15,11 +17,21 @@ enum PieceType
     Queen = 5,
     King = 6
 };
+int debug = 0;
 
-struct Moves
+int debug2 = 0;
+
+struct moveInfo
+{
+    int depth;
+    float eval;
+};
+
+struct Move
 {
     int from;
-    std::vector<int> to;
+    int to;
+    int priority = 0;
 };
 
 struct Piece
@@ -35,11 +47,113 @@ struct Piece
     }
 };
 
+int compare(const void* a, const void* b)
+{
+    /*int main()
+{
+    int n;
+    qsort(values, 6, sizeof(Move), compare);
+    for (n = 0; n < 6; n++)
+        printf("%d ", values[n]);
+    return 0;
+}*/
+
+    Move* MoveA = (Move*)a;
+    Move* MoveB = (Move*)b;
+
+    return (MoveB->priority - MoveA->priority);
+}
+
 struct Board
 {
+    std::unordered_map<uint32_t, moveInfo>* transpositionTable;
+
+    std::vector<std::vector<uint32_t>> randomHashValues;
+
+    std::vector<uint32_t> randomHashValuesCastle;
+
+    std::vector<uint32_t> randomHashValuesEP;
+
+    uint32_t randomHashValuesIsBlack;
+
+    std::vector<int> pawnTable = 
+    {
+        0,  0,  0,  0,  0,  0,  0,  0,
+        50, 50, 50, 50, 50, 50, 50, 50,
+        10, 10, 20, 30, 30, 20, 10, 10,
+        5,  5, 10, 25, 25, 10,  5,  5,
+        0,  0,  0, 20, 20,  0,  0,  0,
+        5, -5, -10,  0,  0,-10, -5,  5,
+        5, 10, 10,-20,-20, 10, 10,  5,
+        0,  0,  0,  0,  0,  0,  0,  0 
+    };
+
+    std::vector<int> knightTable = 
+    {
+        -50,-40,-30,-30,-30,-30,-40,-50,
+        -40,-20,  0,  0,  0,  0,-20,-40,
+        -30,  0, 10, 15, 15, 10,  0,-30,
+        -30,  5, 15, 20, 20, 15,  5,-30,
+        -30,  0, 15, 20, 20, 15,  0,-30,
+        -30,  5, 10, 15, 15, 10,  5,-30,
+        -40,-20,  0,  5,  5,  0,-20,-40,
+        -50,-40,-30,-30,-30,-30,-40,-50 
+    };
+
+    std::vector<int> bishopTable =
+    {
+        -20,-10,-10,-10,-10,-10,-10,-20,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -10,  0,  5, 10, 10,  5,  0,-10,
+        -10,  5,  5, 10, 10,  5,  5,-10,
+        -10,  0, 10, 10, 10, 10,  0,-10,
+        -10, 10, 10, 10, 10, 10, 10,-10,
+        -10,  5,  0,  0,  0,  0,  5,-10,
+        -20,-10,-10,-10,-10,-10,-10,-20,
+    };
+
+    std::vector<int> rookTable =
+    {
+        0,  0,  0,  0,  0,  0,  0,  0,
+        5, 10, 10, 10, 10, 10, 10,  5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        0,  0,  0,  5,  5,  0,  0,  0
+    };
+
+    std::vector<int> queenTable =
+    {
+        -20,-10,-10, -5, -5,-10,-10,-20,
+        -10,  0,  0,  0,  0,  0,  0,-10,
+        -10,  0,  5,  5,  5,  5,  0,-10,
+        -5,  0,  5,  5,  5,  5,  0, -5,
+        0,  0,  5,  5,  5,  5,  0, -5,
+        -10,  5,  5,  5,  5,  5,  0,-10,
+        -10,  0,  5,  0,  0,  0,  0,-10,
+        -20,-10,-10, -5, -5,-10,-10,-20
+    };
+
+    std::vector<int> kingTable =
+    {
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -30,-40,-40,-50,-50,-40,-40,-30,
+        -20,-30,-30,-40,-40,-30,-30,-20,
+        -10,-20,-20,-20,-20,-20,-20,-10,
+        20, 20,  0,  0,  0,  0, 20, 20,
+        20, 30, 10,  0,  0, 10, 30, 20
+    };
+
+    std::vector<std::vector<int>> pTables = { pawnTable, knightTable, bishopTable, rookTable, queenTable, kingTable };
+
     std::vector<float> pVal = { 0.0f, 1.0f, 3.0f, 3.0f, 5.0f, 9.0f, 1000.0f };
 
     std::vector<Piece> Pieces;
+
     int enPassant = -10;
 
     bool blackTurn = false;
@@ -51,6 +165,13 @@ struct Board
 
     int bKing = 4;
     int wKing = 60;
+
+    float blackPieceTable = -95.0f;
+    float whitePieceTable = -95.0f;
+
+    float pieceDiffenece = 0.0f;
+
+    uint32_t hash = 0;
 
     std::vector<int> pinnedMask;
 
@@ -64,52 +185,64 @@ struct Board
             if (fen[i] == 'r')
             {
                 Pieces.push_back(Piece(PieceType::Rook, true));
+                
             }
             else if (fen[i] == 'n')
             {
                 Pieces.push_back(Piece(PieceType::Knight, true));
+                
             }
             else if (fen[i] == 'b')
             {
                 Pieces.push_back(Piece(PieceType::Bishop, true));
+                
             }
             else if (fen[i] == 'q')
             {
                 Pieces.push_back(Piece(PieceType::Queen, true));
+                
             }
             else if (fen[i] == 'k')
             {
                 bKing = Pieces.size();
                 Pieces.push_back(Piece(PieceType::King, true));
+                
             }
             else if (fen[i] == 'p')
             {
                 Pieces.push_back(Piece(PieceType::Pawn, true));
+                
             }
             else if (fen[i] == 'P')
             {
                 Pieces.push_back(Piece(PieceType::Pawn, false));
+                
             }
             else if (fen[i] == 'K')
             {
                 wKing = Pieces.size();
                 Pieces.push_back(Piece(PieceType::King, false));
+                
             }
             else if (fen[i] == 'Q')
             {
                 Pieces.push_back(Piece(PieceType::Queen, false));
+                
             }
             else if (fen[i] == 'B')
             {
                 Pieces.push_back(Piece(PieceType::Bishop, false));
+                
             }
             else if (fen[i] == 'N')
             {
                 Pieces.push_back(Piece(PieceType::Knight, false));
+                
             }
             else if (fen[i] == 'R')
             {
                 Pieces.push_back(Piece(PieceType::Rook, false));
+                
             }
             else if (fen[i] == '/')
             {
@@ -204,8 +337,6 @@ struct Board
         {
             enPassant = 64 - epSquare;
         }
-
-
     }
 
     std::vector<int> possibleMoves(int p, bool ignoreKing)
@@ -2325,19 +2456,65 @@ struct Board
 
     float evaluate()
     {
+        debug++;
+        float pieceTableMult = 0.01f;
+
         float eval = 0.0f;
+
+        eval += pieceDiffenece;
+
+        if (!blackTurn)
+        {
+            eval += (blackPieceTable * pieceTableMult * -1);
+            
+        }
+        else
+        {
+            eval += whitePieceTable * pieceTableMult;
+        }
+
+        return eval;
+    }
+
+    void initHash()
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> randomNums(0, UINT32_MAX);
+
+        //0 == white king side   1 == white queen side  2 = black king side 3 = black queen side
+        for (int i = 0; i < 4; i++)
+        {
+            randomHashValuesCastle.push_back(randomNums(gen));
+            hash ^= randomHashValuesCastle[i];
+        }
+
+        for (int i = 0; i < 8; i++)
+        {
+            randomHashValuesEP.push_back(randomNums(gen));
+        }
+
+        randomHashValuesIsBlack = randomNums(gen);
+
         for (int i = 0; i < Pieces.size(); i++)
         {
-            if (Pieces[i].isBlack)
+            std::vector<uint32_t> temp;
+            for (int j = 0; j < 12; j++)
             {
-                eval += pVal[Pieces[i].type] * -1;
+                uint32_t num = randomNums(gen);
+                temp.push_back(num);
             }
-            else
+            if (Pieces[i].type != PieceType::Empty)
             {
-                eval += pVal[Pieces[i].type];
+                int t = Pieces[i].type - 1;
+                if (Pieces[i].isBlack)
+                {
+                    t += 6;
+                }
+                hash ^= temp[t];
             }
+            randomHashValues.push_back(temp);
         }
-        return eval;
     }
 
     std::vector<std::vector<int>> LegalMoves(bool isBlack)
@@ -2357,26 +2534,37 @@ struct Board
         {
             checked = inCheck(wKing, false);
         }
+        //optimize VV
 
-        if (checked)
+        
+        /*if (checked)
         {
             checkMap = genCheckMap(isBlack, doubleChecked);
-        }
+        }*/
 
-        std::vector<bool> attack = genAttackMap(!isBlack);
+        //optimize VV
+        /*std::vector<bool> attack = genAttackMap(!isBlack);*/
 
         std::vector<int> pin = genPinMap(isBlack);
 
+        /*std::cout << "white " << whitePieces.size();
+        for (int i = 0; i < whitePieces.size(); i++)
+        {
+            std::cout << i << " = " << whitePieces[i] << std::endl;
+        }*/
+
+
+
         for (int i = 0; i < Pieces.size(); i++)
         {
-            if (Pieces[i].isBlack == isBlack)
+            //int p = i;
+            if (Pieces[i].isBlack == blackTurn)
             {
-                int p = i;
-
                 std::vector<int> moves;
 
                 if (doubleChecked)
                 {
+                    std::vector<bool> attack = genAttackMap(!isBlack);
                     if (Pieces[i].type == PieceType::King)
                     {
                         std::vector<int> posMoves = possibleMoves(i, false);
@@ -2393,6 +2581,7 @@ struct Board
                 }
                 else if (checked)
                 {
+                    std::vector<bool> attack = genAttackMap(!isBlack);
                     if (Pieces[i].type == PieceType::King)
                     {
                         std::vector<int> posMoves = possibleMoves(i, false);
@@ -2406,12 +2595,14 @@ struct Board
                     }
                     else
                     {
+                        checkMap = genCheckMap(isBlack, doubleChecked);
                         std::vector<int> posMoves = possibleMoves(i, false);
                         for (int j = 0; j < posMoves.size(); j++)
                         {
                             //not pinned
                             if (pin[i] == 0)
                             {
+                                
                                 //moving between king and the checking piece or taking checking piece
                                 if (checkMap[posMoves[j]] == true)
                                 {
@@ -2447,6 +2638,7 @@ struct Board
                 {
                     if (Pieces[i].type == PieceType::King)
                     {
+                        std::vector<bool> attack = genAttackMap(!isBlack);
                         std::vector<int> posMoves = possibleMoves(i, false);
                         for (int j = 0; j < posMoves.size(); j++)
                         {
@@ -2458,7 +2650,9 @@ struct Board
                     }
                     else
                     {
+                        //optimize VV
                         std::vector<int> posMoves = possibleMoves(i, false);
+                        //optimize VV
                         for (int j = 0; j < posMoves.size(); j++)
                         {
                             //not pinned
@@ -2501,32 +2695,69 @@ struct Board
                 legalMoves[i] = moves;
             }
         }
-        
         return legalMoves;
     }
 
     void Move(int from, int to)
     {
+        /*std::cout << "moved from " << from << " to " << to << std::endl;
+        std::cout << "black " << blackPieceTable << std::endl;
+        std::cout << "white " << whitePieceTable << std::endl;*/
+
+        debug2++;
+        if (Pieces[from].isBlack)
+        {
+            blackPieceTable -= pTables[Pieces[from].type - 1][63 - from];
+        }
+        else
+        {
+            whitePieceTable -= pTables[Pieces[from].type - 1][from];
+        }
+
+        if (Pieces[to].type != PieceType::Empty)
+        {
+            if (Pieces[to].isBlack)
+            {
+                blackPieceTable -= pTables[Pieces[from].type - 1][63 - from];
+            }
+            else
+            {
+                whitePieceTable -= pTables[Pieces[from].type - 1][from];
+            }
+        }
+
         //white promoting
         if (Pieces[from].type == PieceType::Pawn &&  to < 8)
         {
             if (to >= 0)
             {
+                hash ^= randomHashValues[from][0];
+                hash ^= randomHashValues[from][4];
+                pieceDiffenece += pVal[PieceType::Queen] - pVal[PieceType::Pawn];
                 Pieces[from] = Piece(PieceType::Queen, Pieces[from].isBlack);
                 to = (to % 8);
             }
             else if (to >= -9)
             {
+                hash ^= randomHashValues[from][0];
+                hash ^= randomHashValues[from][1];
+                pieceDiffenece += pVal[PieceType::Knight] - pVal[PieceType::Pawn];
                 Pieces[from] = Piece(PieceType::Knight, Pieces[from].isBlack);
                 to = ((to % 8) + 8) % 8;
             }
             else if (to >= -17)
             {
+                hash ^= randomHashValues[from][0];
+                hash ^= randomHashValues[from][3];
+                pieceDiffenece += pVal[PieceType::Rook] - pVal[PieceType::Pawn];
                 Pieces[from] = Piece(PieceType::Rook, Pieces[from].isBlack);
                 to = ((to % 8) + 8) % 8;
             }
             else if (to >= -25)
             {
+                hash ^= randomHashValues[from][0];
+                hash ^= randomHashValues[from][2];
+                pieceDiffenece += pVal[PieceType::Bishop] - pVal[PieceType::Pawn];
                 Pieces[from] = Piece(PieceType::Bishop, Pieces[from].isBlack);
                 to = ((to % 8) + 8) % 8;
             }
@@ -2538,41 +2769,73 @@ struct Board
             
             if (to <= 63)
             {
+                hash ^= randomHashValues[from][6];
+                hash ^= randomHashValues[from][10];
+                pieceDiffenece -= pVal[PieceType::Queen] - pVal[PieceType::Pawn];
                 Pieces[from] = Piece(PieceType::Queen, Pieces[from].isBlack);
             }
             else if (to <= 71)
             {
+                hash ^= randomHashValues[from][6];
+                hash ^= randomHashValues[from][7];
+                pieceDiffenece -= pVal[PieceType::Knight] - pVal[PieceType::Pawn];
                 Pieces[from] = Piece(PieceType::Knight, Pieces[from].isBlack);
             }
             else if (to <= 79)
             {
+                hash ^= randomHashValues[from][6];
+                hash ^= randomHashValues[from][9];
+                pieceDiffenece -= pVal[PieceType::Rook] - pVal[PieceType::Pawn];
                 Pieces[from] = Piece(PieceType::Rook, Pieces[from].isBlack);
             }
             else if (to <= 87)
             {
+                hash ^= randomHashValues[from][6];
+                hash ^= randomHashValues[from][8];
+                pieceDiffenece -= pVal[PieceType::Bishop] - pVal[PieceType::Pawn];
                 Pieces[from] = Piece(PieceType::Bishop, Pieces[from].isBlack);
             }
             to = (to % 8) + 56;
         }
 
+        if (Pieces[to].type != PieceType::Empty)
+        {
+            if (Pieces[to].isBlack)
+            {
+                pieceDiffenece += pVal[Pieces[to].type];
+            }
+            else
+            {
+                pieceDiffenece -= pVal[Pieces[to].type];
+            }
+        }
+
         //Move rook if castling
         if (from == 60 && to == 62 && Pieces[from].type == PieceType::King)
         {
+            hash ^= randomHashValues[63][3];
+            hash ^= randomHashValues[61][3];
             Pieces[61] = Pieces[63];
             Pieces[63] = Piece();
         }
         if (from == 60 && to == 58 && Pieces[from].type == PieceType::King)
         {
+            hash ^= randomHashValues[56][3];
+            hash ^= randomHashValues[59][3];
             Pieces[59] = Pieces[56];
             Pieces[56] = Piece();
         }
         if (from == 4 && to == 6 && Pieces[from].type == PieceType::King)
         {
+            hash ^= randomHashValues[5][9];
+            hash ^= randomHashValues[7][9];
             Pieces[5] = Pieces[7];
             Pieces[7] = Piece();
         }
         if (from == 4 && to == 2 && Pieces[from].type == PieceType::King)
         {
+            hash ^= randomHashValues[3][9];
+            hash ^= randomHashValues[0][9];
             Pieces[3] = Pieces[0];
             Pieces[0] = Piece();
         }
@@ -2580,36 +2843,44 @@ struct Board
         //Prevents castling if rook gets taken
         if (to == 63)
         {
+            hash ^= randomHashValuesCastle[0];
             wKCastle = false;
         }
         if (to == 56)
         {
+            hash ^= randomHashValuesCastle[1];
             wQCastle = false;
         }
         if (to == 7)
         {
+            hash ^= randomHashValuesCastle[2];
             bKCastle = false;
         }
         if (to == 0)
         {
+            hash ^= randomHashValuesCastle[3];
             bQCastle = false;
         }
 
         //Prevents castling if rook moves
         if (from == 63 && Pieces[from].type == PieceType::Rook)
         {
+            hash ^= randomHashValuesCastle[0];
             wKCastle = false;
         }
         if (from == 56 && Pieces[from].type == PieceType::Rook)
         {
+            hash ^= randomHashValuesCastle[1];
             wQCastle = false;
         }
         if (from == 7 && Pieces[from].type == PieceType::Rook)
         {
+            hash ^= randomHashValuesCastle[2];
             bKCastle = false;
         }
         if (from == 0 && Pieces[from].type == PieceType::Rook)
         {
+            hash ^= randomHashValuesCastle[3];
             bQCastle = false;
         }
 
@@ -2619,27 +2890,69 @@ struct Board
             bKing = to;
             bKCastle = false;
             bQCastle = false;
+            hash ^= randomHashValuesCastle[2];
+            hash ^= randomHashValuesCastle[3];
         }
         if (!Pieces[from].isBlack && Pieces[from].type == PieceType::King)
         {
             wKing = to;
             wKCastle = false;
             wQCastle = false;
+            hash ^= randomHashValuesCastle[0];
+            hash ^= randomHashValuesCastle[1];
+        }
+
+        
+
+        if (blackTurn)
+        {
+            if (Pieces[to].type != PieceType::Empty)
+            {
+                hash ^= randomHashValues[to][Pieces[to].type - 1];
+            }
+            hash ^= randomHashValues[from][Pieces[from].type - 1 + 6];
+            hash ^= randomHashValues[to][Pieces[from].type - 1 + 6];
+        }
+        else
+        {
+            if (Pieces[to].type != PieceType::Empty)
+            {
+                hash ^= randomHashValues[to][Pieces[to].type - 1 + 6];
+            }
+            hash ^= randomHashValues[from][Pieces[from].type - 1];
+            hash ^= randomHashValues[to][Pieces[from].type - 1];
         }
 
         Pieces[to] = Pieces[from];
+
+        if (Pieces[to].isBlack)
+        {
+            blackPieceTable += pTables[Pieces[from].type - 1][63 - to];
+        }
+        else
+        {
+            whitePieceTable += pTables[Pieces[from].type - 1][to];
+        }
+
 
         if (Pieces[from].type == PieceType::Pawn && to == enPassant)
         {
             //std::cout << "en passanted" << std::endl;
             if (Pieces[from].isBlack)
             {
+                hash ^= randomHashValues[enPassant - 8][0];
                 Pieces[enPassant - 8] = Piece(PieceType::Empty);
             }
             else
             {
+                hash ^= randomHashValues[enPassant - 8][6];
                 Pieces[enPassant + 8] = Piece(PieceType::Empty);
             }
+        }
+
+        if (enPassant >= 0)
+        {
+            hash ^= randomHashValuesEP[enPassant % 8];
         }
 
         enPassant = -10;
@@ -2648,15 +2961,23 @@ struct Board
         {
             if (Pieces[from].isBlack)
             {
+                hash ^= randomHashValuesEP[from % 8];
                 enPassant = from + 8;
             }
             else
             {
+                hash ^= randomHashValuesEP[from % 8];
                 enPassant = from - 8;
             }
         }
         Pieces[from] = Piece(PieceType::Empty);
+
+        
+        hash ^= randomHashValuesIsBlack;
         blackTurn = !blackTurn;
+
+        /*std::cout << "new black " << blackPieceTable << std::endl;
+        std::cout << "new white " << whitePieceTable << std::endl;*/
     }
 };
 
@@ -2690,33 +3011,78 @@ int perft(Board b, int depth)
     return count;
 }
 
-float Minimax(float alpha, float beta, int depth, Board board)
+float Minimax(float alpha, float beta, int depth, Board board, int qDepth)
 {
-    if (depth == 0)
-    {
-        return board.evaluate();
-    }
+    std::vector<std::vector<int>> moves;
+
     float maxEval = -INFINITY;
     float minEval = INFINITY;
 
-    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
-    
-    if (!board.blackTurn)
+    if (depth == 0)
     {
-        //std::cout << "white turn" << std::endl;
+        if (qDepth == 0)
+        {
+            
+            return board.evaluate();
+        }
+        else
+        {
+
+            moves = board.LegalMoves(board.blackTurn);
+            for (int i = 0; i < moves.size(); i++)
+            {
+                for (int j = 0; j < moves[i].size(); j++)
+                {
+                    if (board.Pieces[moves[i][j]].type != PieceType::Empty && board.Pieces[moves[i][j]].isBlack != board.blackTurn)
+                    {
+                        if (!board.blackTurn)
+                        {
+                            Board b = board;
+                            b.Move(i, moves[i][j]);
+                            float eval = Minimax(alpha, beta, 0, b, qDepth - 1);
+
+                            maxEval = std::max(maxEval, eval);
+
+                            alpha = std::max(alpha, eval);
+                            if (beta <= alpha)
+                            {
+                                break;
+                            }
+                            return maxEval;
+                        }
+                        else
+                        {
+                            Board b = board;
+                            b.Move(i, moves[i][j]);
+                            float eval = Minimax(alpha, beta, 0, b, qDepth - 1);
+
+                            minEval = std::min(minEval, eval);
+                            alpha = std::min(beta, eval);
+                            if (beta <= alpha)
+                            {
+                                break;
+                            }
+                            return minEval;
+                        }
+                    }
+                }
+            }
+
+            return board.evaluate();
+        }
+    }
+    else if (!board.blackTurn)
+    {
+        moves = board.LegalMoves(board.blackTurn);
         for (int i = 0; i < moves.size(); i++)
         {
             for (int j = 0; j < moves[i].size(); j++)
             {
                 Board b = board;
                 b.Move(i, moves[i][j]);
-                float eval = Minimax(alpha, beta, depth - 1, b);
-                if (maxEval < eval)
-                {
-                    //std::cout << "updated thing to " << std::to_string(eval) << " from " << std::to_string(maxEval) << std::endl;
-                }
+                float eval = Minimax(alpha, beta, depth - 1, b, qDepth);
+
                 maxEval = std::max(maxEval, eval);
-                //std::cout << std::to_string(maxEval);
 
                 alpha = std::max(alpha, eval);
                 if (beta <= alpha)
@@ -2730,18 +3096,15 @@ float Minimax(float alpha, float beta, int depth, Board board)
     }
     else
     {
-        //std::cout << "black turn" << std::endl;
+        moves = board.LegalMoves(board.blackTurn);
         for (int i = 0; i < moves.size(); i++)
         {
             for (int j = 0; j < moves[i].size(); j++)
             {
                 Board b = board;
                 b.Move(i, moves[i][j]);
-                float eval = Minimax(alpha, beta, depth - 1, b);
-                if (minEval > eval)
-                {
-                    //std::cout << "updated thing to " << std::to_string(eval) << std::endl;
-                }
+                float eval = Minimax(alpha, beta, depth - 1, b, qDepth);
+
                 minEval = std::min(minEval, eval);
                 alpha = std::min(beta, eval);
                 if (beta <= alpha)
@@ -2753,81 +3116,6 @@ float Minimax(float alpha, float beta, int depth, Board board)
         return minEval;
     }
 }
-
-
-//float ABMin(float alpha, float beta, int depth, Board board);
-//
-//float ABMax(float alpha, float beta, int depth, Board board)
-//{
-//    if (depth == 0)
-//    {
-//        if (board.blackTurn)
-//        {
-//            return board.evaluate() * -1;
-//        }
-//        else
-//        {
-//            return board.evaluate();
-//        }
-//        
-//    }
-//    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
-//    int score;
-//    for (int i = 0; i < moves.size(); i++)
-//    {
-//        for (int j = 0; j < moves[i].size(); j++)
-//        {
-//            Board b = board;
-//            b.Move(i, moves[i][j]);
-//
-//            score = ABMin(alpha, beta, depth - 1, b);
-//            if (score >= beta)
-//            {
-//                return beta;
-//            }
-//            if (score > alpha)
-//            {
-//                return score;
-//            }
-//        }
-//
-//    }
-//    return alpha;
-//}
-//float ABMin(float alpha, float beta, int depth, Board board)
-//{
-//    if (depth == 0)
-//    {
-//        if (board.blackTurn)
-//        {
-//            return board.evaluate() * -1;
-//        }
-//        else
-//        {
-//            return board.evaluate();
-//        }
-//    }
-//    std::vector<std::vector<int>> moves = board.LegalMoves(board.blackTurn);
-//    int score;
-//    for (int i = 0; i < moves.size(); i++)
-//    {
-//        for (int j = 0; j < moves[i].size(); j++)
-//        {
-//            Board b = board;
-//            b.Move(i, moves[i][j]);
-//            score = ABMax(alpha, beta, depth - 1, b);
-//            if (score <= alpha)
-//            {
-//                return alpha;
-//            }
-//            if (score < beta)
-//            {
-//                beta = score;
-//            }
-//        }
-//    }
-//    return beta;
-//}
 
 int main()
 {
@@ -2867,12 +3155,17 @@ int main()
     {
         sprites[i].setScale(0.5, 0.5);
     }
+    std::unordered_map<uint32_t, moveInfo> transpositionTable;
 
     Board board;
 
+    board.transpositionTable = &transpositionTable;
+
     board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-    //board.loadPosition("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 1");
+    board.initHash();
+
+    
 
     bool prevlClick = false; 
 
@@ -2881,7 +3174,7 @@ int main()
     std::vector<int> posMoves;
     bool lClick = false;
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 0; i++)
     {
         auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -2907,8 +3200,7 @@ int main()
         {
             lClick = sf::Mouse::isButtonPressed(sf::Mouse::Left);
         }
-
-        //Random move bot
+        /*
         if (board.blackTurn)
         {
             std::vector<std::vector<int>> allMoves = board.LegalMoves(board.blackTurn);
@@ -2926,6 +3218,9 @@ int main()
 
             if (hasMoves)
             {
+                debug = 0;
+                debug2 = 0;
+
                 int bestMoveA;
                 int bestMoveB;
                 float bestMoveE = INFINITY;
@@ -2936,15 +3231,10 @@ int main()
                 {
                     for (int j = 0; j < allMoves[i].size(); j++)
                     {
-                        /*if (i == 0 && j == 0)
-                        {
-                            std::cout << "updated to first possible move" << std::endl;
-                            bestMoveA = i;
-                            bestMoveB = allMoves[i][j];
-                        }*/
+
                         Board b = board;
                         b.Move(i, allMoves[i][j]);
-                        float temp = Minimax(-INFINITY, INFINITY, 3, b);
+                        float temp = Minimax(-INFINITY, INFINITY, 3, b, 0);
                         if (temp <= bestMoveE)
                         {
                             bestMoveA = i;
@@ -2961,15 +3251,11 @@ int main()
                 std::cout << "played move " << bestMoveA << " to " << bestMoveB << " in " << ms_double.count() << "ms\n";
                 board.Move(bestMoveA, bestMoveB);
 
+                
 
-                /*int rand1 = rand() % allMoves.size();
+                std::cout << "debug: " << debug << std::endl;
+                std::cout << "debug2 : " << debug2 << std::endl;
 
-                while (allMoves[rand1].size() <= 0)
-                {
-                    rand1 = rand() % allMoves.size();
-                }
-
-                int rand2 = rand() % allMoves[rand1].size();*/
 
                 //board.Move(rand1, allMoves[rand1][rand2]);
             }
@@ -2996,10 +3282,11 @@ int main()
             }
         }
 
-
+        */
 
         if (lClick != prevlClick && lClick)
         {
+            std::cout << board.hash << std::endl;
             int x = floor(sf::Mouse::getPosition(app).x / 64);
             int y = floor(sf::Mouse::getPosition(app).y / 64);
             /*
@@ -3103,6 +3390,8 @@ int main()
                     if (wasMove)
                     {
                         board.Move(selectedSquare, (y * 8) + x);
+                        
+
                         posMoves.clear();
                         selectedSquare = -1;
                     }
