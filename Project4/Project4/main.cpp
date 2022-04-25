@@ -21,17 +21,26 @@ int debug = 0;
 
 int debug2 = 0;
 
+struct move
+{
+    int from;
+    int to;
+    float priority = 0.0f;
+
+    move(int f, int t, float p = 0.0f)
+    {
+        from = f;
+        to = t;
+        priority = p;
+    }
+
+};
+
 struct moveInfo
 {
     int depth;
     float eval;
-};
-
-struct Move
-{
-    int from;
-    int to;
-    int priority = 0;
+    std::vector<move> moves;
 };
 
 struct Piece
@@ -47,7 +56,8 @@ struct Piece
     }
 };
 
-int compare(const void* a, const void* b)
+//bool compare(const void* a, const void* b)
+bool compare(move MoveA, move MoveB)
 {
     /*int main()
 {
@@ -58,99 +68,109 @@ int compare(const void* a, const void* b)
     return 0;
 }*/
 
-    Move* MoveA = (Move*)a;
-    Move* MoveB = (Move*)b;
+    /*move* MoveA = (move*)a;
+    move* MoveB = (move*)b;*/
 
-    return (MoveB->priority - MoveA->priority);
+    float t = MoveB.priority - MoveA.priority;
+
+    if (t <= 0.0f)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
+
+std::vector<std::vector<uint32_t>> randomHashValues;
+
+std::vector<uint32_t> randomHashValuesCastle;
+
+std::vector<uint32_t> randomHashValuesEP;
+
+uint32_t randomHashValuesIsBlack;
+
+std::vector<int> pawnTable =
+{
+    0,  0,  0,  0,  0,  0,  0,  0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    5,  5, 10, 25, 25, 10,  5,  5,
+    0,  0,  0, 20, 20,  0,  0,  0,
+    5, -5, -10,  0,  0,-10, -5,  5,
+    5, 10, 10,-20,-20, 10, 10,  5,
+    0,  0,  0,  0,  0,  0,  0,  0
+};
+
+std::vector<int> knightTable =
+{
+    -50,-40,-30,-30,-30,-30,-40,-50,
+    -40,-20,  0,  0,  0,  0,-20,-40,
+    -30,  0, 10, 15, 15, 10,  0,-30,
+    -30,  5, 15, 20, 20, 15,  5,-30,
+    -30,  0, 15, 20, 20, 15,  0,-30,
+    -30,  5, 10, 15, 15, 10,  5,-30,
+    -40,-20,  0,  5,  5,  0,-20,-40,
+    -50,-40,-30,-30,-30,-30,-40,-50
+};
+
+std::vector<int> bishopTable =
+{
+    -20,-10,-10,-10,-10,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5, 10, 10,  5,  0,-10,
+    -10,  5,  5, 10, 10,  5,  5,-10,
+    -10,  0, 10, 10, 10, 10,  0,-10,
+    -10, 10, 10, 10, 10, 10, 10,-10,
+    -10,  5,  0,  0,  0,  0,  5,-10,
+    -20,-10,-10,-10,-10,-10,-10,-20,
+};
+
+std::vector<int> rookTable =
+{
+    0,  0,  0,  0,  0,  0,  0,  0,
+    5, 10, 10, 10, 10, 10, 10,  5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    0,  0,  0,  5,  5,  0,  0,  0
+};
+
+std::vector<int> queenTable =
+{
+    -20,-10,-10, -5, -5,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5,  5,  5,  5,  0,-10,
+    -5,  0,  5,  5,  5,  5,  0, -5,
+    0,  0,  5,  5,  5,  5,  0, -5,
+    -10,  5,  5,  5,  5,  5,  0,-10,
+    -10,  0,  5,  0,  0,  0,  0,-10,
+    -20,-10,-10, -5, -5,-10,-10,-20
+};
+
+std::vector<int> kingTable =
+{
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -20,-30,-30,-40,-40,-30,-30,-20,
+    -10,-20,-20,-20,-20,-20,-20,-10,
+    20, 20,  0,  0,  0,  0, 20, 20,
+    20, 30, 10,  0,  0, 10, 30, 20
+};
+
+std::vector<std::vector<int>> pTables = { pawnTable, knightTable, bishopTable, rookTable, queenTable, kingTable };
+
+std::vector<float> pVal = { 0.0f, 1.0f, 3.0f, 3.0f, 5.0f, 9.0f, 1000.0f };
+
 
 struct Board
 {
     std::unordered_map<uint32_t, moveInfo>* transpositionTable;
-
-    std::vector<std::vector<uint32_t>> randomHashValues;
-
-    std::vector<uint32_t> randomHashValuesCastle;
-
-    std::vector<uint32_t> randomHashValuesEP;
-
-    uint32_t randomHashValuesIsBlack;
-
-    std::vector<int> pawnTable = 
-    {
-        0,  0,  0,  0,  0,  0,  0,  0,
-        50, 50, 50, 50, 50, 50, 50, 50,
-        10, 10, 20, 30, 30, 20, 10, 10,
-        5,  5, 10, 25, 25, 10,  5,  5,
-        0,  0,  0, 20, 20,  0,  0,  0,
-        5, -5, -10,  0,  0,-10, -5,  5,
-        5, 10, 10,-20,-20, 10, 10,  5,
-        0,  0,  0,  0,  0,  0,  0,  0 
-    };
-
-    std::vector<int> knightTable = 
-    {
-        -50,-40,-30,-30,-30,-30,-40,-50,
-        -40,-20,  0,  0,  0,  0,-20,-40,
-        -30,  0, 10, 15, 15, 10,  0,-30,
-        -30,  5, 15, 20, 20, 15,  5,-30,
-        -30,  0, 15, 20, 20, 15,  0,-30,
-        -30,  5, 10, 15, 15, 10,  5,-30,
-        -40,-20,  0,  5,  5,  0,-20,-40,
-        -50,-40,-30,-30,-30,-30,-40,-50 
-    };
-
-    std::vector<int> bishopTable =
-    {
-        -20,-10,-10,-10,-10,-10,-10,-20,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -10,  0,  5, 10, 10,  5,  0,-10,
-        -10,  5,  5, 10, 10,  5,  5,-10,
-        -10,  0, 10, 10, 10, 10,  0,-10,
-        -10, 10, 10, 10, 10, 10, 10,-10,
-        -10,  5,  0,  0,  0,  0,  5,-10,
-        -20,-10,-10,-10,-10,-10,-10,-20,
-    };
-
-    std::vector<int> rookTable =
-    {
-        0,  0,  0,  0,  0,  0,  0,  0,
-        5, 10, 10, 10, 10, 10, 10,  5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        0,  0,  0,  5,  5,  0,  0,  0
-    };
-
-    std::vector<int> queenTable =
-    {
-        -20,-10,-10, -5, -5,-10,-10,-20,
-        -10,  0,  0,  0,  0,  0,  0,-10,
-        -10,  0,  5,  5,  5,  5,  0,-10,
-        -5,  0,  5,  5,  5,  5,  0, -5,
-        0,  0,  5,  5,  5,  5,  0, -5,
-        -10,  5,  5,  5,  5,  5,  0,-10,
-        -10,  0,  5,  0,  0,  0,  0,-10,
-        -20,-10,-10, -5, -5,-10,-10,-20
-    };
-
-    std::vector<int> kingTable =
-    {
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -30,-40,-40,-50,-50,-40,-40,-30,
-        -20,-30,-30,-40,-40,-30,-30,-20,
-        -10,-20,-20,-20,-20,-20,-20,-10,
-        20, 20,  0,  0,  0,  0, 20, 20,
-        20, 30, 10,  0,  0, 10, 30, 20
-    };
-
-    std::vector<std::vector<int>> pTables = { pawnTable, knightTable, bishopTable, rookTable, queenTable, kingTable };
-
-    std::vector<float> pVal = { 0.0f, 1.0f, 3.0f, 3.0f, 5.0f, 9.0f, 1000.0f };
 
     std::vector<Piece> Pieces;
 
@@ -173,7 +193,7 @@ struct Board
 
     uint32_t hash = 0;
 
-    std::vector<int> pinnedMask;
+    //std::vector<int> pinnedMask;
 
     void loadPosition(std::string fen)
     {
@@ -184,64 +204,64 @@ struct Board
         {
             if (fen[i] == 'r')
             {
-                Pieces.push_back(Piece(PieceType::Rook, true));
+                Pieces.emplace_back(Piece(PieceType::Rook, true));
                 
             }
             else if (fen[i] == 'n')
             {
-                Pieces.push_back(Piece(PieceType::Knight, true));
+                Pieces.emplace_back(Piece(PieceType::Knight, true));
                 
             }
             else if (fen[i] == 'b')
             {
-                Pieces.push_back(Piece(PieceType::Bishop, true));
+                Pieces.emplace_back(Piece(PieceType::Bishop, true));
                 
             }
             else if (fen[i] == 'q')
             {
-                Pieces.push_back(Piece(PieceType::Queen, true));
+                Pieces.emplace_back(Piece(PieceType::Queen, true));
                 
             }
             else if (fen[i] == 'k')
             {
                 bKing = Pieces.size();
-                Pieces.push_back(Piece(PieceType::King, true));
+                Pieces.emplace_back(Piece(PieceType::King, true));
                 
             }
             else if (fen[i] == 'p')
             {
-                Pieces.push_back(Piece(PieceType::Pawn, true));
+                Pieces.emplace_back(Piece(PieceType::Pawn, true));
                 
             }
             else if (fen[i] == 'P')
             {
-                Pieces.push_back(Piece(PieceType::Pawn, false));
+                Pieces.emplace_back(Piece(PieceType::Pawn, false));
                 
             }
             else if (fen[i] == 'K')
             {
                 wKing = Pieces.size();
-                Pieces.push_back(Piece(PieceType::King, false));
+                Pieces.emplace_back(Piece(PieceType::King, false));
                 
             }
             else if (fen[i] == 'Q')
             {
-                Pieces.push_back(Piece(PieceType::Queen, false));
+                Pieces.emplace_back(Piece(PieceType::Queen, false));
                 
             }
             else if (fen[i] == 'B')
             {
-                Pieces.push_back(Piece(PieceType::Bishop, false));
+                Pieces.emplace_back(Piece(PieceType::Bishop, false));
                 
             }
             else if (fen[i] == 'N')
             {
-                Pieces.push_back(Piece(PieceType::Knight, false));
+                Pieces.emplace_back(Piece(PieceType::Knight, false));
                 
             }
             else if (fen[i] == 'R')
             {
-                Pieces.push_back(Piece(PieceType::Rook, false));
+                Pieces.emplace_back(Piece(PieceType::Rook, false));
                 
             }
             else if (fen[i] == '/')
@@ -259,7 +279,7 @@ struct Board
 
                 for (int j = 0; j < t; j++)
                 {
-                    Pieces.push_back(Piece(PieceType::Empty, false));
+                    Pieces.emplace_back(Piece(PieceType::Empty, false));
                 }
             }
         }
@@ -339,6 +359,7 @@ struct Board
         }
     }
 
+    /*
     std::vector<int> possibleMoves(int p, bool ignoreKing)
     {
         std::vector<int> moves;
@@ -366,15 +387,9 @@ struct Board
                 {
                     if (Pieces[SquareInfront].type == PieceType::Empty)
                     {
-                        moves.push_back(SquareInfront);
+                        moves.emplace_back(SquareInfront);
 
                         //if moving to either the first rank or eighth rank
-                        /*if ((floor(SquareInfront / 8) == 0 || floor(SquareInfront / 8) == 7) && !ignoreKing)
-                        {
-                            moves.push_back(SquareInfront + (8 * direction * 1));
-                            moves.push_back(SquareInfront + (8 * direction * 2));
-                            moves.push_back(SquareInfront + (8 * direction * 3));
-                        }*/
 
                         int Square2Infront = p + (16 * direction);
 
@@ -383,7 +398,7 @@ struct Board
                         {
                             if (Pieces[Square2Infront].type == PieceType::Empty && (floor(p / 8) == 1 || floor(p / 8) == 6))
                             {
-                                moves.push_back(Square2Infront);
+                                moves.emplace_back(Square2Infront);
                             }
                         }
                     }
@@ -402,15 +417,10 @@ struct Board
                         // limit to edges of the board on ranks 1 and 8
                         if (p % 8 != 7)
                         {
-                            moves.push_back(SquareDiagRight);
+                            moves.emplace_back(SquareDiagRight);
 
                             //if moving to either the first rank or eighth rank
-                            /*if ((floor(SquareDiagRight / 8) == 0 || floor(SquareDiagRight / 8) == 7) && !ignoreKing)
-                            {
-                                moves.push_back(SquareDiagRight + (8 * direction * 1));
-                                moves.push_back(SquareDiagRight + (8 * direction * 2));
-                                moves.push_back(SquareDiagRight + (8 * direction * 3));
-                            }*/
+
                         }
                     }
                 }
@@ -428,15 +438,10 @@ struct Board
                         // limit to edges of the board on ranks 1 and 8
                         if (p % 8 != 0)
                         {
-                            moves.push_back(SquareDiagLeft);
+                            moves.emplace_back(SquareDiagLeft);
 
                             //if moving to either the first rank or eighth rank
-                            /*if ((floor(SquareDiagLeft / 8) == 0 || floor(SquareDiagLeft / 8) == 7) && !ignoreKing)
-                            {
-                                moves.push_back(SquareDiagLeft + (8 * direction * 1));
-                                moves.push_back(SquareDiagLeft + (8 * direction * 2));
-                                moves.push_back(SquareDiagLeft + (8 * direction * 3));
-                            }*/
+
                         }
                     }
                 }
@@ -447,12 +452,12 @@ struct Board
                 // limit to edges of the board on ranks 1 and 8
                 if (p % 8 != 7)
                 {
-                    moves.push_back(SquareDiagRight);
+                    moves.emplace_back(SquareDiagRight);
                 }
                 // limit to edges of the board on ranks 1 and 8
                 if (p % 8 != 0)
                 {
-                    moves.push_back(SquareDiagLeft);
+                    moves.emplace_back(SquareDiagLeft);
                 }
             }
 
@@ -462,7 +467,7 @@ struct Board
                 // limit to edges of the board on ranks 1 and 8
                 if (p % 8 != 7)
                 {
-                    moves.push_back(SquareDiagRight);
+                    moves.emplace_back(SquareDiagRight);
                 }
             }
 
@@ -472,7 +477,7 @@ struct Board
                 // limit to edges of the board on ranks 1 and 8
                 if (p % 8 != 0)
                 {
-                    moves.push_back(SquareDiagLeft);
+                    moves.emplace_back(SquareDiagLeft);
                 }
             }
         }
@@ -489,12 +494,12 @@ struct Board
                     {
                         if (Pieces[topLeft].type == PieceType::Empty || (Pieces[topLeft].type != Empty && Pieces[topLeft].isBlack != Pieces[p].isBlack))
                         {
-                            moves.push_back(topLeft);
+                            moves.emplace_back(topLeft);
                         }
                     }
                     else
                     {
-                        moves.push_back(topLeft);
+                        moves.emplace_back(topLeft);
                     }
                 }
             }
@@ -509,12 +514,12 @@ struct Board
                     {
                         if (Pieces[topRight].type == PieceType::Empty || (Pieces[topRight].type != Empty && Pieces[topRight].isBlack != Pieces[p].isBlack))
                         {
-                            moves.push_back(topRight);
+                            moves.emplace_back(topRight);
                         }
                     }
                     else
                     {
-                        moves.push_back(topRight);
+                        moves.emplace_back(topRight);
                     }
                 }
             }
@@ -529,12 +534,12 @@ struct Board
                     {
                         if (Pieces[leftTop].type == PieceType::Empty || (Pieces[leftTop].type != Empty && Pieces[leftTop].isBlack != Pieces[p].isBlack))
                         {
-                            moves.push_back(leftTop);
+                            moves.emplace_back(leftTop);
                         }
                     }
                     else
                     {
-                        moves.push_back(leftTop);
+                        moves.emplace_back(leftTop);
                     }
                 }
             }
@@ -549,12 +554,12 @@ struct Board
                     {
                         if (Pieces[leftDown].type == PieceType::Empty || (Pieces[leftDown].type != Empty && Pieces[leftDown].isBlack != Pieces[p].isBlack))
                         {
-                            moves.push_back(leftDown);
+                            moves.emplace_back(leftDown);
                         }
                     }
                     else
                     {
-                        moves.push_back(leftDown);
+                        moves.emplace_back(leftDown);
                     }
                 }
             }
@@ -569,12 +574,12 @@ struct Board
                     {
                         if (Pieces[rightUp].type == PieceType::Empty || (Pieces[rightUp].type != Empty && Pieces[rightUp].isBlack != Pieces[p].isBlack))
                         {
-                            moves.push_back(rightUp);
+                            moves.emplace_back(rightUp);
                         }
                     }
                     else
                     {
-                        moves.push_back(rightUp);
+                        moves.emplace_back(rightUp);
                     }
                 }
             }
@@ -589,12 +594,12 @@ struct Board
                     {
                         if (Pieces[rightDown].type == PieceType::Empty || (Pieces[rightDown].type != Empty && Pieces[rightDown].isBlack != Pieces[p].isBlack))
                         {
-                            moves.push_back(rightDown);
+                            moves.emplace_back(rightDown);
                         }
                     }
                     else
                     {
-                        moves.push_back(rightDown);
+                        moves.emplace_back(rightDown);
                     }
                 }
             }
@@ -609,12 +614,12 @@ struct Board
                     {
                         if (Pieces[downLeft].type == PieceType::Empty || (Pieces[downLeft].type != Empty && Pieces[downLeft].isBlack != Pieces[p].isBlack))
                         {
-                            moves.push_back(downLeft);
+                            moves.emplace_back(downLeft);
                         }
                     }
                     else
                     {
-                        moves.push_back(downLeft);
+                        moves.emplace_back(downLeft);
                     }
                 }
             }
@@ -629,12 +634,12 @@ struct Board
                     {
                         if (Pieces[downRight].type == PieceType::Empty || (Pieces[downRight].type != Empty && Pieces[downRight].isBlack != Pieces[p].isBlack))
                         {
-                            moves.push_back(downRight);
+                            moves.emplace_back(downRight);
                         }
                     }
                     else
                     {
-                        moves.push_back(downRight);
+                        moves.emplace_back(downRight);
                     }
                 }
             }
@@ -654,7 +659,7 @@ struct Board
                 int topLeft = p - 9 * i;
                 if (Pieces[topLeft].type == PieceType::Empty)
                 {
-                    moves.push_back(topLeft);
+                    moves.emplace_back(topLeft);
                 }
                 else
                 {
@@ -662,21 +667,21 @@ struct Board
                     {
                         if (ignoreKing && Pieces[topLeft].type == PieceType::King)
                         {
-                            moves.push_back(topLeft);
-                            
+                            moves.emplace_back(topLeft);
+
                         }
                         else
                         {
-                            moves.push_back(topLeft);
+                            moves.emplace_back(topLeft);
                             break;
                         }
-                        
+
                     }
                     else
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(topLeft);
+                            moves.emplace_back(topLeft);
                         }
                         break;
                     }
@@ -690,7 +695,7 @@ struct Board
                 int bottomLeft = p + 7 * i;
                 if (Pieces[bottomLeft].type == PieceType::Empty)
                 {
-                    moves.push_back(bottomLeft);
+                    moves.emplace_back(bottomLeft);
                 }
                 else
                 {
@@ -698,12 +703,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[bottomLeft].type == PieceType::King)
                         {
-                            moves.push_back(bottomLeft);
+                            moves.emplace_back(bottomLeft);
 
                         }
                         else
                         {
-                            moves.push_back(bottomLeft);
+                            moves.emplace_back(bottomLeft);
                             break;
                         }
                     }
@@ -711,7 +716,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(bottomLeft);
+                            moves.emplace_back(bottomLeft);
                         }
                         break;
                     }
@@ -725,7 +730,7 @@ struct Board
                 int topRight = p - 7 * i;
                 if (Pieces[topRight].type == PieceType::Empty)
                 {
-                    moves.push_back(topRight);
+                    moves.emplace_back(topRight);
                 }
                 else
                 {
@@ -733,12 +738,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[topRight].type == PieceType::King)
                         {
-                            moves.push_back(topRight);
+                            moves.emplace_back(topRight);
 
                         }
                         else
                         {
-                            moves.push_back(topRight);
+                            moves.emplace_back(topRight);
                             break;
                         }
                     }
@@ -746,7 +751,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(topRight);
+                            moves.emplace_back(topRight);
                         }
                         break;
                     }
@@ -760,7 +765,7 @@ struct Board
                 int bottomRight = p + 9 * i;
                 if (Pieces[bottomRight].type == PieceType::Empty)
                 {
-                    moves.push_back(bottomRight);
+                    moves.emplace_back(bottomRight);
                 }
                 else
                 {
@@ -768,12 +773,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[bottomRight].type == PieceType::King)
                         {
-                            moves.push_back(bottomRight);
+                            moves.emplace_back(bottomRight);
 
                         }
                         else
                         {
-                            moves.push_back(bottomRight);
+                            moves.emplace_back(bottomRight);
                             break;
                         }
                     }
@@ -781,7 +786,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(bottomRight);
+                            moves.emplace_back(bottomRight);
                         }
                         break;
                     }
@@ -798,7 +803,7 @@ struct Board
                 int left = p - 1 * i;
                 if (Pieces[left].type == PieceType::Empty)
                 {
-                    moves.push_back(left);
+                    moves.emplace_back(left);
                 }
                 else
                 {
@@ -806,12 +811,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[left].type == PieceType::King)
                         {
-                            moves.push_back(left);
+                            moves.emplace_back(left);
 
                         }
                         else
                         {
-                            moves.push_back(left);
+                            moves.emplace_back(left);
                             break;
                         }
                     }
@@ -819,7 +824,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(left);
+                            moves.emplace_back(left);
                         }
                         break;
                     }
@@ -833,7 +838,7 @@ struct Board
                 int top = p - 8 * i;
                 if (Pieces[top].type == PieceType::Empty)
                 {
-                    moves.push_back(top);
+                    moves.emplace_back(top);
                 }
                 else
                 {
@@ -841,12 +846,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[top].type == PieceType::King)
                         {
-                            moves.push_back(top);
+                            moves.emplace_back(top);
 
                         }
                         else
                         {
-                            moves.push_back(top);
+                            moves.emplace_back(top);
                             break;
                         }
                     }
@@ -854,7 +859,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(top);
+                            moves.emplace_back(top);
                         }
                         break;
                     }
@@ -868,7 +873,7 @@ struct Board
                 int right = p + 1 * i;
                 if (Pieces[right].type == PieceType::Empty)
                 {
-                    moves.push_back(right);
+                    moves.emplace_back(right);
                 }
                 else
                 {
@@ -876,12 +881,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[right].type == PieceType::King)
                         {
-                            moves.push_back(right);
+                            moves.emplace_back(right);
 
                         }
                         else
                         {
-                            moves.push_back(right);
+                            moves.emplace_back(right);
                             break;
                         }
                     }
@@ -889,7 +894,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(right);
+                            moves.emplace_back(right);
                         }
                         break;
                     }
@@ -903,7 +908,7 @@ struct Board
                 int bottom = p + 8 * i;
                 if (Pieces[bottom].type == PieceType::Empty)
                 {
-                    moves.push_back(bottom);
+                    moves.emplace_back(bottom);
                 }
                 else
                 {
@@ -911,12 +916,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[bottom].type == PieceType::King)
                         {
-                            moves.push_back(bottom);
+                            moves.emplace_back(bottom);
 
                         }
                         else
                         {
-                            moves.push_back(bottom);
+                            moves.emplace_back(bottom);
                             break;
                         }
                     }
@@ -924,7 +929,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(bottom);
+                            moves.emplace_back(bottom);
                         }
                         break;
                     }
@@ -941,7 +946,7 @@ struct Board
                 int left = p - 1 * i;
                 if (Pieces[left].type == PieceType::Empty)
                 {
-                    moves.push_back(left);
+                    moves.emplace_back(left);
                 }
                 else
                 {
@@ -949,12 +954,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[left].type == PieceType::King)
                         {
-                            moves.push_back(left);
+                            moves.emplace_back(left);
 
                         }
                         else
                         {
-                            moves.push_back(left);
+                            moves.emplace_back(left);
                             break;
                         }
                     }
@@ -962,7 +967,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(left);
+                            moves.emplace_back(left);
                         }
                         break;
                     }
@@ -976,7 +981,7 @@ struct Board
                 int top = p - 8 * i;
                 if (Pieces[top].type == PieceType::Empty)
                 {
-                    moves.push_back(top);
+                    moves.emplace_back(top);
                 }
                 else
                 {
@@ -984,12 +989,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[top].type == PieceType::King)
                         {
-                            moves.push_back(top);
+                            moves.emplace_back(top);
 
                         }
                         else
                         {
-                            moves.push_back(top);
+                            moves.emplace_back(top);
                             break;
                         }
                     }
@@ -997,7 +1002,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(top);
+                            moves.emplace_back(top);
                         }
                         break;
                     }
@@ -1011,7 +1016,7 @@ struct Board
                 int right = p + 1 * i;
                 if (Pieces[right].type == PieceType::Empty)
                 {
-                    moves.push_back(right);
+                    moves.emplace_back(right);
                 }
                 else
                 {
@@ -1019,12 +1024,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[right].type == PieceType::King)
                         {
-                            moves.push_back(right);
+                            moves.emplace_back(right);
 
                         }
                         else
                         {
-                            moves.push_back(right);
+                            moves.emplace_back(right);
                             break;
                         }
                     }
@@ -1032,7 +1037,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(right);
+                            moves.emplace_back(right);
                         }
                         break;
                     }
@@ -1046,7 +1051,7 @@ struct Board
                 int bottom = p + 8 * i;
                 if (Pieces[bottom].type == PieceType::Empty)
                 {
-                    moves.push_back(bottom);
+                    moves.emplace_back(bottom);
                 }
                 else
                 {
@@ -1054,12 +1059,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[bottom].type == PieceType::King)
                         {
-                            moves.push_back(bottom);
+                            moves.emplace_back(bottom);
 
                         }
                         else
                         {
-                            moves.push_back(bottom);
+                            moves.emplace_back(bottom);
                             break;
                         }
                     }
@@ -1067,7 +1072,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(bottom);
+                            moves.emplace_back(bottom);
                         }
                         break;
                     }
@@ -1081,7 +1086,7 @@ struct Board
                 int topLeft = p - 9 * i;
                 if (Pieces[topLeft].type == PieceType::Empty)
                 {
-                    moves.push_back(topLeft);
+                    moves.emplace_back(topLeft);
                 }
                 else
                 {
@@ -1089,12 +1094,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[topLeft].type == PieceType::King)
                         {
-                            moves.push_back(topLeft);
+                            moves.emplace_back(topLeft);
 
                         }
                         else
                         {
-                            moves.push_back(topLeft);
+                            moves.emplace_back(topLeft);
                             break;
                         }
                     }
@@ -1102,7 +1107,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(topLeft);
+                            moves.emplace_back(topLeft);
                         }
                         break;
                     }
@@ -1116,7 +1121,7 @@ struct Board
                 int bottomLeft = p + 7 * i;
                 if (Pieces[bottomLeft].type == PieceType::Empty)
                 {
-                    moves.push_back(bottomLeft);
+                    moves.emplace_back(bottomLeft);
                 }
                 else
                 {
@@ -1124,12 +1129,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[bottomLeft].type == PieceType::King)
                         {
-                            moves.push_back(bottomLeft);
+                            moves.emplace_back(bottomLeft);
 
                         }
                         else
                         {
-                            moves.push_back(bottomLeft);
+                            moves.emplace_back(bottomLeft);
                             break;
                         }
                     }
@@ -1137,7 +1142,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(bottomLeft);
+                            moves.emplace_back(bottomLeft);
                         }
                         break;
                     }
@@ -1151,7 +1156,7 @@ struct Board
                 int topRight = p - 7 * i;
                 if (Pieces[topRight].type == PieceType::Empty)
                 {
-                    moves.push_back(topRight);
+                    moves.emplace_back(topRight);
                 }
                 else
                 {
@@ -1159,12 +1164,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[topRight].type == PieceType::King)
                         {
-                            moves.push_back(topRight);
+                            moves.emplace_back(topRight);
 
                         }
                         else
                         {
-                            moves.push_back(topRight);
+                            moves.emplace_back(topRight);
                             break;
                         }
                     }
@@ -1172,7 +1177,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(topRight);
+                            moves.emplace_back(topRight);
                         }
                         break;
                     }
@@ -1186,7 +1191,7 @@ struct Board
                 int bottomRight = p + 9 * i;
                 if (Pieces[bottomRight].type == PieceType::Empty)
                 {
-                    moves.push_back(bottomRight);
+                    moves.emplace_back(bottomRight);
                 }
                 else
                 {
@@ -1194,12 +1199,12 @@ struct Board
                     {
                         if (ignoreKing && Pieces[bottomRight].type == PieceType::King)
                         {
-                            moves.push_back(bottomRight);
+                            moves.emplace_back(bottomRight);
 
                         }
                         else
                         {
-                            moves.push_back(bottomRight);
+                            moves.emplace_back(bottomRight);
                             break;
                         }
                     }
@@ -1207,7 +1212,7 @@ struct Board
                     {
                         if (ignoreKing)
                         {
-                            moves.push_back(bottomRight);
+                            moves.emplace_back(bottomRight);
                         }
                         break;
                     }
@@ -1223,13 +1228,13 @@ struct Board
                 int left = p - 1;
                 if (Pieces[left].type == PieceType::Empty)
                 {
-                    moves.push_back(left);
+                    moves.emplace_back(left);
                 }
                 else
                 {
                     if (Pieces[left].isBlack != Pieces[p].isBlack || ignoreKing)
                     {
-                        moves.push_back(left);
+                        moves.emplace_back(left);
                     }
                 }
 
@@ -1239,13 +1244,13 @@ struct Board
                 {
                     if (Pieces[topLeft].type == PieceType::Empty)
                     {
-                        moves.push_back(topLeft);
+                        moves.emplace_back(topLeft);
                     }
                     else
                     {
                         if (Pieces[topLeft].isBlack != Pieces[p].isBlack || ignoreKing)
                         {
-                            moves.push_back(topLeft);
+                            moves.emplace_back(topLeft);
                         }
                     }
                 }
@@ -1256,13 +1261,13 @@ struct Board
                 {
                     if (Pieces[bottomLeft].type == PieceType::Empty)
                     {
-                        moves.push_back(bottomLeft);
+                        moves.emplace_back(bottomLeft);
                     }
                     else
                     {
                         if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack || ignoreKing)
                         {
-                            moves.push_back(bottomLeft);
+                            moves.emplace_back(bottomLeft);
                         }
                     }
                 }
@@ -1274,13 +1279,13 @@ struct Board
             {
                 if (Pieces[top].type == PieceType::Empty)
                 {
-                    moves.push_back(top);
+                    moves.emplace_back(top);
                 }
                 else
                 {
                     if (Pieces[top].isBlack != Pieces[p].isBlack || ignoreKing)
                     {
-                        moves.push_back(top);
+                        moves.emplace_back(top);
                     }
                 }
             }
@@ -1291,13 +1296,13 @@ struct Board
             {
                 if (Pieces[bottom].type == PieceType::Empty)
                 {
-                    moves.push_back(bottom);
+                    moves.emplace_back(bottom);
                 }
                 else
                 {
                     if (Pieces[bottom].isBlack != Pieces[p].isBlack || ignoreKing)
                     {
-                        moves.push_back(bottom);
+                        moves.emplace_back(bottom);
                     }
                 }
             }
@@ -1308,13 +1313,13 @@ struct Board
                 int right = p + 1;
                 if (Pieces[right].type == PieceType::Empty)
                 {
-                    moves.push_back(right);
+                    moves.emplace_back(right);
                 }
                 else
                 {
                     if (Pieces[right].isBlack != Pieces[p].isBlack || ignoreKing)
                     {
-                        moves.push_back(right);
+                        moves.emplace_back(right);
                     }
                 }
 
@@ -1325,13 +1330,13 @@ struct Board
                 {
                     if (Pieces[topRight].type == PieceType::Empty)
                     {
-                        moves.push_back(topRight);
+                        moves.emplace_back(topRight);
                     }
                     else
                     {
                         if (Pieces[topRight].isBlack != Pieces[p].isBlack || ignoreKing)
                         {
-                            moves.push_back(topRight);
+                            moves.emplace_back(topRight);
                         }
                     }
                 }
@@ -1342,13 +1347,13 @@ struct Board
                 {
                     if (Pieces[bottomRight].type == PieceType::Empty)
                     {
-                        moves.push_back(bottomRight);
+                        moves.emplace_back(bottomRight);
                     }
                     else
                     {
                         if (Pieces[bottomRight].isBlack != Pieces[p].isBlack || ignoreKing)
                         {
-                            moves.push_back(bottomRight);
+                            moves.emplace_back(bottomRight);
                         }
                     }
                 }
@@ -1362,7 +1367,7 @@ struct Board
                     {
                         if ((Pieces[5].type == PieceType::Empty && Pieces[6].type == PieceType::Empty) && !(inCheck(4, true) || inCheck(5, true) || inCheck(6, true)))
                         {
-                            moves.push_back(6);
+                            moves.emplace_back(6);
                         }
                     }
                 }
@@ -1372,7 +1377,7 @@ struct Board
                     {
                         if ((Pieces[3].type == PieceType::Empty && Pieces[2].type == PieceType::Empty && Pieces[1].type == PieceType::Empty) && !(inCheck(4, true) || inCheck(3, true) || inCheck(2, true)))
                         {
-                            moves.push_back(2);
+                            moves.emplace_back(2);
                         }
                     }
                 }
@@ -1383,7 +1388,7 @@ struct Board
                     {
                         if ((Pieces[61].type == PieceType::Empty && Pieces[62].type == PieceType::Empty) && !(inCheck(60, false) || inCheck(61, false) || inCheck(62, false)))
                         {
-                            moves.push_back(62);
+                            moves.emplace_back(62);
                         }
                     }
                 }
@@ -1394,7 +1399,7 @@ struct Board
                     {
                         if ((Pieces[59].type == PieceType::Empty && Pieces[58].type == PieceType::Empty && Pieces[57].type == PieceType::Empty) && !(inCheck(60, false) || inCheck(59, false) || inCheck(58, false)))
                         {
-                            moves.push_back(58);
+                            moves.emplace_back(58);
                         }
                     }
                 }
@@ -1403,22 +1408,1470 @@ struct Board
 
         return moves;
     }
+    */
+
+    std::vector<move> possibleMoves(bool isBlack)
+    {
+        debug2++;
+        std::vector<move> moves;
+
+        moves.reserve(70);
+
+        for (int p = 0; p < Pieces.size(); p++)
+        {
+            if (Pieces[p].type == PieceType::Empty)
+            {
+                //Do nothing
+            }
+            else
+            {
+                if (Pieces[p].isBlack == isBlack)
+                {
+                    if (Pieces[p].type == PieceType::Pawn)
+                    {
+                        int direction = -1;
+                        if (Pieces[p].isBlack)
+                        {
+                            direction = 1;
+                        }
+
+                        //Moving Forward
+                        int SquareInfront = p + (8 * direction);
+                        if (SquareInfront >= 0 && SquareInfront < 64)
+                        {
+                            if (Pieces[SquareInfront].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, SquareInfront, 0));
+
+                                int Square2Infront = p + (16 * direction);
+                                //Checks 2 squares infront if 1 square infront was clear and if its on either 2nd or 7th rank
+                                if (Square2Infront >= 0 && Square2Infront < 64)
+                                {
+                                    if (Pieces[Square2Infront].type == PieceType::Empty && (floor(p / 8) == 1 || floor(p / 8) == 6))
+                                    {
+                                        moves.emplace_back(move(p, Square2Infront, 0));
+                                    }
+                                }
+                            }
+                        }
+
+                        //Attacking diagonally right
+                        int SquareDiagRight = p + (8 * direction) + 1;
+                        if (Pieces[SquareDiagRight].type != PieceType::Empty)
+                        {
+                            if (SquareDiagRight < 64 && SquareDiagRight >= 0)
+                            {
+                                //Checks infront and 1 square to the right
+                                if (Pieces[SquareDiagRight].isBlack != Pieces[p].isBlack)
+                                {
+                                    // limit to edges of the board on ranks 1 and 8
+                                    if (p % 8 != 7)
+                                    {
+                                        moves.emplace_back(move(p, SquareDiagRight, pVal[Pieces[SquareDiagRight].type] - (pVal[PieceType::Pawn] / 10)));
+                                    }
+                                }
+                            }
+                        }
+
+                        //Attacking diagonally left
+                        int SquareDiagLeft = p + (8 * direction) - 1;
+                        if (Pieces[SquareDiagLeft].type != PieceType::Empty)
+                        {
+                            //Checks infront and 1 square to the left
+                            if (Pieces[SquareDiagLeft].isBlack != Pieces[p].isBlack)
+                            {
+                                if (SquareDiagLeft < 64 && SquareDiagLeft >= 0)
+                                {
+                                    // limit to edges of the board on ranks 1 and 8
+                                    if (p % 8 != 0)
+                                    {
+                                        moves.emplace_back(move(p, SquareDiagLeft, pVal[Pieces[SquareDiagLeft].type] - (pVal[PieceType::Pawn] / 10)));
+                                    }
+                                }
+                            }
+                        }
+
+                        //En passant diagonally right
+                        if (SquareDiagRight == enPassant)
+                        {
+                            // limit to edges of the board on ranks 1 and 8
+                            if (p % 8 != 7)
+                            {
+                                moves.emplace_back(move(p, SquareDiagRight, pVal[PieceType::Pawn] - (pVal[PieceType::Pawn] / 10)));
+                            }
+                        }
+
+                        //En passant diagonally left
+                        if (SquareDiagLeft == enPassant)
+                        {
+                            // limit to edges of the board on ranks 1 and 8
+                            if (p % 8 != 0)
+                            {
+                                moves.emplace_back(move(p, SquareDiagLeft, pVal[PieceType::Pawn] - (pVal[PieceType::Pawn] / 10)));
+                            }
+                        }
+                    }
+
+                    else if (Pieces[p].type == PieceType::Knight)
+                    {
+                        //2 up 1 left
+                        int topLeft = p - 17;
+                        if (topLeft >= 0 && topLeft < 64)
+                        {
+                            if (p % 8 != 0)
+                            {
+                                if (Pieces[topLeft].type == PieceType::Empty || (Pieces[topLeft].type != Empty && Pieces[topLeft].isBlack != Pieces[p].isBlack))
+                                {
+                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Knight] / 10)));
+                                }
+                            }
+                        }
+
+                        //2 up 1 right
+                        int topRight = p - 15;
+                        if (topRight >= 0 && topRight < 64)
+                        {
+                            if (p % 8 != 7)
+                            {
+                                if (Pieces[topRight].type == PieceType::Empty || (Pieces[topRight].type != Empty && Pieces[topRight].isBlack != Pieces[p].isBlack))
+                                {
+                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Knight] / 10)));
+                                }
+                            }
+                        }
+
+                        //2 left 1 up
+                        int leftTop = p - 10;
+                        if (leftTop >= 0 && leftTop < 64)
+                        {
+                            if (p % 8 != 1 && p % 8 != 0)
+                            {
+                                if (Pieces[leftTop].type == PieceType::Empty || (Pieces[leftTop].type != Empty && Pieces[leftTop].isBlack != Pieces[p].isBlack))
+                                {
+                                    moves.emplace_back(move(p, leftTop, pVal[Pieces[leftTop].type] - (pVal[PieceType::Knight] / 10)));
+                                }
+                            }
+                        }
+
+                        //2 left 1 down
+                        int leftDown = p + 6;
+                        if (leftDown >= 0 && leftDown < 64)
+                        {
+                            if (p % 8 != 1 && p % 8 != 0)
+                            {
+                                if (Pieces[leftDown].type == PieceType::Empty || (Pieces[leftDown].type != Empty && Pieces[leftDown].isBlack != Pieces[p].isBlack))
+                                {
+                                    moves.emplace_back(move(p, leftDown, pVal[Pieces[leftDown].type] - (pVal[PieceType::Knight] / 10)));
+                                }
+                            }
+                        }
+
+                        //2 right 1 up
+                        int rightUp = p - 6;
+                        if (rightUp >= 0 && rightUp < 64)
+                        {
+                            if (p % 8 != 7 && p % 8 != 6)
+                            {
+                                if (Pieces[rightUp].type == PieceType::Empty || (Pieces[rightUp].type != Empty && Pieces[rightUp].isBlack != Pieces[p].isBlack))
+                                {
+                                    moves.emplace_back(move(p, rightUp, pVal[Pieces[rightUp].type] - (pVal[PieceType::Knight] / 10)));
+                                }
+                            }
+                        }
+
+                        //2 right 1 down
+                        int rightDown = p + 10;
+                        if (rightDown >= 0 && rightDown < 64)
+                        {
+                            if (p % 8 != 7 && p % 8 != 6)
+                            {
+                                if (Pieces[rightDown].type == PieceType::Empty || (Pieces[rightDown].type != Empty && Pieces[rightDown].isBlack != Pieces[p].isBlack))
+                                {
+                                    moves.emplace_back(move(p, rightDown, pVal[Pieces[rightDown].type] - (pVal[PieceType::Knight] / 10)));
+                                }
+                            }
+                        }
+
+                        //2 down 1 left
+                        int downLeft = p + 15;
+                        if (downLeft >= 0 && downLeft < 64)
+                        {
+                            if (p % 8 != 0)
+                            {
+                                if (Pieces[downLeft].type == PieceType::Empty || (Pieces[downLeft].type != Empty && Pieces[downLeft].isBlack != Pieces[p].isBlack))
+                                {
+                                    moves.emplace_back(move(p, downLeft, pVal[Pieces[downLeft].type] - (pVal[PieceType::Knight] / 10)));
+                                }
+                            }
+                        }
+
+                        //2 down 1 right
+                        int downRight = p + 17;
+                        if (downRight >= 0 && downRight < 64)
+                        {
+                            if (p % 8 != 7)
+                            {
+                                if (Pieces[downRight].type == PieceType::Empty || (Pieces[downRight].type != Empty && Pieces[downRight].isBlack != Pieces[p].isBlack))
+                                {
+                                    moves.emplace_back(move(p, downRight, pVal[Pieces[downRight].type] - (pVal[PieceType::Knight] / 10)));
+                                }
+                            }
+                        }
+                    }
+
+                    else if (Pieces[p].type == PieceType::Bishop)
+                    {
+                        int topSquares = int(floor(p / 8) + 1);
+                        int leftSquares = ((p % 8) + 1);
+                        int bottomSquares = 8 - topSquares + 1;
+                        int rightSquares = 8 - leftSquares + 1;
+
+                        //Diag top left
+                        int topLeftSquares = std::min(leftSquares, topSquares);
+                        for (int i = 1; i < topLeftSquares; i++)
+                        {
+                            int topLeft = p - 9 * i;
+                            if (Pieces[topLeft].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Bishop] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Bishop] / 10)));
+                                    break;
+
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag bottom left
+                        int bottomLeftSquares = std::min(bottomSquares, leftSquares);
+                        for (int i = 1; i < bottomLeftSquares; i++)
+                        {
+                            int bottomLeft = p + 7 * i;
+                            if (Pieces[bottomLeft].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Bishop] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Bishop] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag top right
+                        int topRightSquares = std::min(topSquares, rightSquares);
+                        for (int i = 1; i < topRightSquares; i++)
+                        {
+                            int topRight = p - 7 * i;
+                            if (Pieces[topRight].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Bishop] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[topRight].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Bishop] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag bottom right
+                        int bottomRightSquares = std::min(bottomSquares, rightSquares);
+                        for (int i = 1; i < bottomRightSquares; i++)
+                        {
+                            int bottomRight = p + 9 * i;
+                            if (Pieces[bottomRight].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Bishop] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Bishop] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (Pieces[p].type == PieceType::Rook)
+                    {
+                        //Left
+                        int leftSquares = ((p % 8) + 1);
+                        for (int i = 1; i < leftSquares; i++)
+                        {
+                            int left = p - 1 * i;
+                            if (Pieces[left].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Rook] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[left].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Rook] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Top
+                        int topSquares = int(floor(p / 8) + 1);
+                        for (int i = 1; i < topSquares; i++)
+                        {
+                            int top = p - 8 * i;
+                            if (Pieces[top].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Rook] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[top].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Rook] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Right
+                        int rightSquares = 8 - leftSquares + 1;
+                        for (int i = 1; i < rightSquares; i++)
+                        {
+                            int right = p + 1 * i;
+                            if (Pieces[right].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Rook] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[right].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Rook] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Bottom
+                        int bottomSquares = 8 - topSquares + 1;
+                        for (int i = 1; i < bottomSquares; i++)
+                        {
+                            int bottom = p + 8 * i;
+                            if (Pieces[bottom].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Rook] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[bottom].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Rook] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (Pieces[p].type == PieceType::Queen)
+                    {
+                        //Left
+                        int leftSquares = ((p % 8) + 1);
+                        for (int i = 1; i < leftSquares; i++)
+                        {
+                            int left = p - 1 * i;
+                            if (Pieces[left].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[left].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Top
+                        int topSquares = int(floor(p / 8) + 1);
+                        for (int i = 1; i < topSquares; i++)
+                        {
+                            int top = p - 8 * i;
+                            if (Pieces[top].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[top].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Right
+                        int rightSquares = 8 - leftSquares + 1;
+                        for (int i = 1; i < rightSquares; i++)
+                        {
+                            int right = p + 1 * i;
+                            if (Pieces[right].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[right].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Bottom
+                        int bottomSquares = 8 - topSquares + 1;
+                        for (int i = 1; i < bottomSquares; i++)
+                        {
+                            int bottom = p + 8 * i;
+                            if (Pieces[bottom].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[bottom].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag top left
+                        int topLeftSquares = std::min(leftSquares, topSquares);
+                        for (int i = 1; i < topLeftSquares; i++)
+                        {
+                            int topLeft = p - 9 * i;
+                            if (Pieces[topLeft].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                    break;
+
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag bottom left
+                        int bottomLeftSquares = std::min(bottomSquares, leftSquares);
+                        for (int i = 1; i < bottomLeftSquares; i++)
+                        {
+                            int bottomLeft = p + 7 * i;
+                            if (Pieces[bottomLeft].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag top right
+                        int topRightSquares = std::min(topSquares, rightSquares);
+                        for (int i = 1; i < topRightSquares; i++)
+                        {
+                            int topRight = p - 7 * i;
+                            if (Pieces[topRight].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[topRight].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag bottom right
+                        int bottomRightSquares = std::min(bottomSquares, rightSquares);
+                        for (int i = 1; i < bottomRightSquares; i++)
+                        {
+                            int bottomRight = p + 9 * i;
+                            if (Pieces[bottomRight].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 10)));
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    else if (Pieces[p].type == PieceType::King)
+                    {
+                        if (p % 8 != 0)
+                        {
+                            //Left
+                            int left = p - 1;
+                            if (Pieces[left].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[left].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 10)));
+                                }
+                            }
+
+                            //Diag top left
+                            int topLeft = p - 9;
+                            if (topLeft >= 0)
+                            {
+                                if (Pieces[topLeft].type == PieceType::Empty)
+                                {
+                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                }
+                                else
+                                {
+                                    if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
+                                    {
+                                        moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                    }
+                                }
+                            }
+
+                            //Diag bottom left
+                            int bottomLeft = p + 7;
+                            if (bottomLeft < 64)
+                            {
+                                if (Pieces[bottomLeft].type == PieceType::Empty)
+                                {
+                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                }
+                                else
+                                {
+                                    if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
+                                    {
+                                        moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                    }
+                                }
+                            }
+                        }
+
+                        //Top
+                        int top = p - 8;
+                        if (top >= 0)
+                        {
+                            if (Pieces[top].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[top].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 10)));
+                                }
+                            }
+                        }
+
+                        //Bottom
+                        int bottom = p + 8;
+                        if (bottom < 64)
+                        {
+                            if (Pieces[bottom].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[bottom].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 10)));
+                                }
+                            }
+                        }
+
+                        if (p % 8 != 7)
+                        {
+                            //Right
+                            int right = p + 1;
+                            if (Pieces[right].type == PieceType::Empty)
+                            {
+                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 10)));
+                            }
+                            else
+                            {
+                                if (Pieces[right].isBlack != Pieces[p].isBlack)
+                                {
+                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 10)));
+                                }
+                            }
+
+                            //Diag top right
+                            int topRight = p - 7;
+
+                            if (topRight >= 0)
+                            {
+                                if (Pieces[topRight].type == PieceType::Empty)
+                                {
+                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 10)));
+                                }
+                                else
+                                {
+                                    if (Pieces[topRight].isBlack != Pieces[p].isBlack)
+                                    {
+                                        moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 10)));
+                                    }
+                                }
+                            }
+
+                            //Diag bottom right
+                            int bottomRight = p + 9;
+                            if (bottomRight < 64)
+                            {
+                                if (Pieces[bottomRight].type == PieceType::Empty)
+                                {
+                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 10)));
+                                }
+                                else
+                                {
+                                    if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
+                                    {
+                                        moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 10)));
+                                    }
+                                }
+                            }
+                        }
+
+                        if (Pieces[p].isBlack)
+                        {
+                            if (bKCastle)
+                            {
+                                if ((Pieces[5].type == PieceType::Empty && Pieces[6].type == PieceType::Empty) && !(inCheck(4, true) || inCheck(5, true) || inCheck(6, true)))
+                                {
+                                    moves.emplace_back(move(p, 6, 0));
+                                }
+                            }
+                        }
+                        if (Pieces[p].isBlack)
+                        {
+                            if (bQCastle)
+                            {
+                                if ((Pieces[3].type == PieceType::Empty && Pieces[2].type == PieceType::Empty && Pieces[1].type == PieceType::Empty) && !(inCheck(4, true) || inCheck(3, true) || inCheck(2, true)))
+                                {
+                                    moves.emplace_back(move(p, 2, 0));
+                                }
+                            }
+                        }
+
+                        if (!Pieces[p].isBlack)
+                        {
+                            if (wKCastle)
+                            {
+                                if ((Pieces[61].type == PieceType::Empty && Pieces[62].type == PieceType::Empty) && !(inCheck(60, false) || inCheck(61, false) || inCheck(62, false)))
+                                {
+                                    moves.emplace_back(move(p, 62, 0));
+                                }
+                            }
+                        }
+
+                        if (!Pieces[p].isBlack)
+                        {
+                            if (wQCastle)
+                            {
+                                if ((Pieces[59].type == PieceType::Empty && Pieces[58].type == PieceType::Empty && Pieces[57].type == PieceType::Empty) && !(inCheck(60, false) || inCheck(59, false) || inCheck(58, false)))
+                                {
+                                    moves.emplace_back(move(p, 58, 0));
+                                }
+                            }
+                        }
+                    }
+                }
+            }            
+        }
+        return moves;
+    }
 
     std::vector<bool> genAttackMap(bool isBlack)
     {
         std::vector<bool> attackMap(64, false);
-        for (int i = 0; i < Pieces.size(); i++)
-        {
-            if (Pieces[i].isBlack == isBlack && Pieces[i].type != PieceType::Empty)
-            {
-                std::vector<int> temp = possibleMoves(i, true);
 
-                for (int j = 0; j < temp.size(); j++)
+        for (int p = 0; p < Pieces.size(); p++)
+        {
+            if (Pieces[p].type == PieceType::Empty)
+            {
+                //Do nothing
+            }
+            else
+            {
+                if (Pieces[p].isBlack == isBlack)
                 {
-                    attackMap[temp[j]] = true;
+                    if (Pieces[p].type == PieceType::Pawn)
+                    {
+                        int direction = -1;
+                        if (Pieces[p].isBlack)
+                        {
+                            direction = 1;
+                        }
+
+                        int SquareDiagRight = p + (8 * direction) + 1;
+                        if (p % 8 != 7)
+                        {
+                            attackMap[SquareDiagRight] = true;
+                        }
+
+                        int SquareDiagLeft = p + (8 * direction) - 1;
+                        if (p % 8 != 0)
+                        {
+                            attackMap[SquareDiagLeft] = true;
+                        }
+
+                    }
+
+                    else if (Pieces[p].type == PieceType::Knight)
+                    {
+                        //2 up 1 left
+                        int topLeft = p - 17;
+                        if (topLeft >= 0 && topLeft < 64)
+                        {
+                            if (p % 8 != 0)
+                            {
+                                attackMap[topLeft] = true;
+                            }
+                        }
+
+                        //2 up 1 right
+                        int topRight = p - 15;
+                        if (topRight >= 0 && topRight < 64)
+                        {
+                            if (p % 8 != 7)
+                            {
+                                attackMap[topRight] = true;
+                            }
+                        }
+
+                        //2 left 1 up
+                        int leftTop = p - 10;
+                        if (leftTop >= 0 && leftTop < 64)
+                        {
+                            //if (p % 8 != 1 && p % 8 != 0)
+                            if (p % 8 > 1)
+                            {
+                                attackMap[leftTop] = true;
+                            }
+                        }
+
+                        //2 left 1 down
+                        int leftDown = p + 6;
+                        if (leftDown >= 0 && leftDown < 64)
+                        {
+                            if (p % 8 > 1)
+                            {
+                                attackMap[leftDown] = true;
+                            }
+                        }
+
+                        //2 right 1 up
+                        int rightUp = p - 6;
+                        if (rightUp >= 0 && rightUp < 64)
+                        {
+                            if (p % 8 < 6)
+                            {
+                                attackMap[rightUp] = true;
+                            }
+                        }
+
+                        //2 right 1 down
+                        int rightDown = p + 10;
+                        if (rightDown >= 0 && rightDown < 64)
+                        {
+                            if (p % 8 < 6)
+                            {
+                                attackMap[rightDown] = true;
+                            }
+                        }
+
+                        //2 down 1 left
+                        int downLeft = p + 15;
+                        if (downLeft >= 0 && downLeft < 64)
+                        {
+                            if (p % 8 != 0)
+                            {
+                                attackMap[downLeft] = true;
+                            }
+                        }
+
+                        //2 down 1 right
+                        int downRight = p + 17;
+                        if (downRight >= 0 && downRight < 64)
+                        {
+                            if (p % 8 != 7)
+                            {
+                                attackMap[downRight] = true;
+                            }
+                        }
+                    }
+
+                    else if (Pieces[p].type == PieceType::Bishop)
+                    {
+                        int topSquares = int(floor(p / 8) + 1);
+                        int leftSquares = ((p % 8) + 1);
+                        int bottomSquares = 8 - topSquares + 1;
+                        int rightSquares = 8 - leftSquares + 1;
+
+                        //Diag top left
+                        int topLeftSquares = std::min(leftSquares, topSquares);
+                        for (int i = 1; i < topLeftSquares; i++)
+                        {
+                            int topLeft = p - 9 * i;
+
+                            if (Pieces[topLeft].type == PieceType::Empty)
+                            {
+                                attackMap[topLeft] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
+                                {
+
+                                    attackMap[topLeft] = true;
+
+                                    if (Pieces[topLeft].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+
+                                }
+                                else
+                                {
+                                    attackMap[topLeft] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag bottom left
+                        int bottomLeftSquares = std::min(bottomSquares, leftSquares);
+                        for (int i = 1; i < bottomLeftSquares; i++)
+                        {
+                            int bottomLeft = p + 7 * i;
+
+                            if (Pieces[bottomLeft].type == PieceType::Empty)
+                            {
+                                attackMap[bottomLeft] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
+                                {
+
+                                    attackMap[bottomLeft] = true;
+
+                                    if (Pieces[bottomLeft].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+
+                                }
+                                else
+                                {
+                                    attackMap[bottomLeft] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag top right
+                        int topRightSquares = std::min(topSquares, rightSquares);
+                        for (int i = 1; i < topRightSquares; i++)
+                        {
+                            int topRight = p - 7 * i;
+                            
+                            if (Pieces[topRight].type == PieceType::Empty)
+                            {
+                                attackMap[topRight] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[topRight].isBlack != Pieces[p].isBlack)
+                                {
+
+                                    attackMap[topRight] = true;
+
+                                    if (Pieces[topRight].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+
+                                }
+                                else
+                                {
+                                    attackMap[topRight] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag bottom right
+                        int bottomRightSquares = std::min(bottomSquares, rightSquares);
+                        for (int i = 1; i < bottomRightSquares; i++)
+                        {
+                            int bottomRight = p + 9 * i;
+                            
+                            if (Pieces[bottomRight].type == PieceType::Empty)
+                            {
+                                attackMap[bottomRight] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
+                                {
+
+                                    attackMap[bottomRight] = true;
+
+                                    if (Pieces[bottomRight].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[bottomRight] = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    else if (Pieces[p].type == PieceType::Rook)
+                    {
+                        //Left
+                        int leftSquares = ((p % 8) + 1);
+                        for (int i = 1; i < leftSquares; i++)
+                        {
+                            int left = p - 1 * i;
+
+                            if (Pieces[left].type == PieceType::Empty)
+                            {
+                                attackMap[left] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[left].isBlack != Pieces[p].isBlack)
+                                {
+                                    attackMap[left] = true;
+
+                                    if (Pieces[left].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[left] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Top
+                        int topSquares = int(floor(p / 8) + 1);
+                        for (int i = 1; i < topSquares; i++)
+                        {
+                            int top = p - 8 * i;
+                            
+                            if (Pieces[top].type == PieceType::Empty)
+                            {
+                                attackMap[top] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[top].isBlack != Pieces[p].isBlack)
+                                {
+                                    attackMap[top] = true;
+
+                                    if (Pieces[top].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[top] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Right
+                        int rightSquares = 8 - leftSquares + 1;
+                        for (int i = 1; i < rightSquares; i++)
+                        {
+                            int right = p + 1 * i;
+                            
+                            if (Pieces[right].type == PieceType::Empty)
+                            {
+                                attackMap[right] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[right].isBlack != Pieces[p].isBlack)
+                                {
+                                    attackMap[right] = true;
+
+                                    if (Pieces[right].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[right] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Bottom
+                        int bottomSquares = 8 - topSquares + 1;
+                        for (int i = 1; i < bottomSquares; i++)
+                        {
+                            int bottom = p + 8 * i;
+                            
+                            if (Pieces[bottom].type == PieceType::Empty)
+                            {
+                                attackMap[bottom] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[bottom].isBlack != Pieces[p].isBlack)
+                                {
+                                    attackMap[bottom] = true;
+
+                                    if (Pieces[bottom].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[bottom] = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    else if (Pieces[p].type == PieceType::Queen)
+                    {
+                        //Left
+                        int leftSquares = ((p % 8) + 1);
+                        for (int i = 1; i < leftSquares; i++)
+                        {
+                            int left = p - 1 * i;
+
+                            if (Pieces[left].type == PieceType::Empty)
+                            {
+                                attackMap[left] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[left].isBlack != Pieces[p].isBlack)
+                                {
+                                    attackMap[left] = true;
+
+                                    if (Pieces[left].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[left] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Top
+                        int topSquares = int(floor(p / 8) + 1);
+                        for (int i = 1; i < topSquares; i++)
+                        {
+                            int top = p - 8 * i;
+
+                            if (Pieces[top].type == PieceType::Empty)
+                            {
+                                attackMap[top] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[top].isBlack != Pieces[p].isBlack)
+                                {
+                                    attackMap[top] = true;
+
+                                    if (Pieces[top].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[top] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Right
+                        int rightSquares = 8 - leftSquares + 1;
+                        for (int i = 1; i < rightSquares; i++)
+                        {
+                            int right = p + 1 * i;
+
+                            if (Pieces[right].type == PieceType::Empty)
+                            {
+                                attackMap[right] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[right].isBlack != Pieces[p].isBlack)
+                                {
+                                    attackMap[right] = true;
+
+                                    if (Pieces[right].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[right] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Bottom
+                        int bottomSquares = 8 - topSquares + 1;
+                        for (int i = 1; i < bottomSquares; i++)
+                        {
+                            int bottom = p + 8 * i;
+
+                            if (Pieces[bottom].type == PieceType::Empty)
+                            {
+                                attackMap[bottom] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[bottom].isBlack != Pieces[p].isBlack)
+                                {
+                                    attackMap[bottom] = true;
+
+                                    if (Pieces[bottom].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[bottom] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag top left
+                        int topLeftSquares = std::min(leftSquares, topSquares);
+                        for (int i = 1; i < topLeftSquares; i++)
+                        {
+                            int topLeft = p - 9 * i;
+
+                            if (Pieces[topLeft].type == PieceType::Empty)
+                            {
+                                attackMap[topLeft] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
+                                {
+
+                                    attackMap[topLeft] = true;
+
+                                    if (Pieces[topLeft].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+
+                                }
+                                else
+                                {
+                                    attackMap[topLeft] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag bottom left
+                        int bottomLeftSquares = std::min(bottomSquares, leftSquares);
+                        for (int i = 1; i < bottomLeftSquares; i++)
+                        {
+                            int bottomLeft = p + 7 * i;
+
+                            if (Pieces[bottomLeft].type == PieceType::Empty)
+                            {
+                                attackMap[bottomLeft] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
+                                {
+
+                                    attackMap[bottomLeft] = true;
+
+                                    if (Pieces[bottomLeft].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+
+                                }
+                                else
+                                {
+                                    attackMap[bottomLeft] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag top right
+                        int topRightSquares = std::min(topSquares, rightSquares);
+                        for (int i = 1; i < topRightSquares; i++)
+                        {
+                            int topRight = p - 7 * i;
+
+                            if (Pieces[topRight].type == PieceType::Empty)
+                            {
+                                attackMap[topRight] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[topRight].isBlack != Pieces[p].isBlack)
+                                {
+
+                                    attackMap[topRight] = true;
+
+                                    if (Pieces[topRight].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+
+                                }
+                                else
+                                {
+                                    attackMap[topRight] = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        //Diag bottom right
+                        int bottomRightSquares = std::min(bottomSquares, rightSquares);
+                        for (int i = 1; i < bottomRightSquares; i++)
+                        {
+                            int bottomRight = p + 9 * i;
+
+                            if (Pieces[bottomRight].type == PieceType::Empty)
+                            {
+                                attackMap[bottomRight] = true;
+                            }
+                            else
+                            {
+                                if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
+                                {
+
+                                    attackMap[bottomRight] = true;
+
+                                    if (Pieces[bottomRight].type != PieceType::King)
+                                    {
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    attackMap[bottomRight] = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    else if (Pieces[p].type == PieceType::King)
+                    {
+                        if (p % 8 != 0)
+                        {
+                            //Left
+                            int left = p - 1;
+
+                            attackMap[left] = true;
+
+                            //Diag top left
+                            int topLeft = p - 9;
+                            if (topLeft >= 0)
+                            {
+                                attackMap[topLeft] = true;
+                            }
+
+                            //Diag bottom left
+                            int bottomLeft = p + 7;
+                            if (bottomLeft < 64)
+                            {
+                                attackMap[bottomLeft] = true;
+                            }
+                        }
+
+                        //Top
+                        int top = p - 8;
+                        if (top >= 0)
+                        {
+                            attackMap[top] = true;
+                        }
+
+                        //Bottom
+                        int bottom = p + 8;
+                        if (bottom < 64)
+                        {
+                            attackMap[bottom] = true;
+                        }
+
+                        if (p % 8 != 7)
+                        {
+                            //Right
+                            int right = p + 1;
+                            attackMap[right] = true;
+
+                            //Diag top right
+                            int topRight = p - 7;
+
+                            if (topRight >= 0)
+                            {
+                                attackMap[topRight] = true;
+                            }
+
+                            //Diag bottom right
+                            int bottomRight = p + 9;
+                            if (bottomRight < 64)
+                            {
+                                attackMap[bottomRight] = true;
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        /*std::vector<move> temp = possibleMoves(isBlack, true);
+
+        for (int i = 0; i < temp.size(); i++)
+        {
+            attackMap[temp[i].to] = true;
+        }*/
+
         return attackMap;
     }
 
@@ -1447,7 +2900,7 @@ struct Board
             int left = p - 1 * i;
             if (Pieces[left].type == PieceType::Empty)
             {
-                tempSquares.push_back(left);
+                tempSquares.emplace_back(left);
             }
             else
             {
@@ -1456,7 +2909,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (Pieces[left].type == PieceType::Rook || Pieces[left].type == PieceType::Queen)
                     {
-                        tempSquares.push_back(left);
+                        tempSquares.emplace_back(left);
                         //updates all squares that have been checked to the checkMap
                         //std::cout << "checked from left" << std::endl;
                         checkCount++;
@@ -1482,7 +2935,7 @@ struct Board
             int top = p - 8 * i;
             if (Pieces[top].type == PieceType::Empty)
             {
-                tempSquares.push_back(top);
+                tempSquares.emplace_back(top);
             }
             else
             {
@@ -1491,7 +2944,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (Pieces[top].type == PieceType::Rook || Pieces[top].type == PieceType::Queen)
                     {
-                        tempSquares.push_back(top);
+                        tempSquares.emplace_back(top);
                         //updates all squares that have been checked to the checkMap
                         //std::cout << "checked from top" << std::endl;
                         checkCount++;
@@ -1517,7 +2970,7 @@ struct Board
             int right = p + 1 * i;
             if (Pieces[right].type == PieceType::Empty)
             {
-                tempSquares.push_back(right);
+                tempSquares.emplace_back(right);
             }
             else
             {
@@ -1526,7 +2979,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (Pieces[right].type == PieceType::Rook || Pieces[right].type == PieceType::Queen)
                     {
-                        tempSquares.push_back(right);
+                        tempSquares.emplace_back(right);
                         //updates all squares that have been checked to the checkMap
                         //std::cout << "checked from right " << right << std::endl;
                         checkCount++;
@@ -1552,7 +3005,7 @@ struct Board
             int bottom = p + 8 * i;
             if (Pieces[bottom].type == PieceType::Empty)
             {
-                tempSquares.push_back(bottom);
+                tempSquares.emplace_back(bottom);
             }
             else
             {
@@ -1561,7 +3014,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (Pieces[bottom].type == PieceType::Rook || Pieces[bottom].type == PieceType::Queen)
                     {
-                        tempSquares.push_back(bottom);
+                        tempSquares.emplace_back(bottom);
                         //updates all squares that have been checked to the checkMap
                         //std::cout << "checked from bottom" << std::endl;
                         checkCount++;
@@ -1587,7 +3040,7 @@ struct Board
             int topLeft = p - 9 * i;
             if (Pieces[topLeft].type == PieceType::Empty)
             {
-                tempSquares.push_back(topLeft);
+                tempSquares.emplace_back(topLeft);
             }
             else
             {
@@ -1596,7 +3049,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (Pieces[topLeft].type == PieceType::Bishop || Pieces[topLeft].type == PieceType::Queen)
                     {
-                        tempSquares.push_back(topLeft);
+                        tempSquares.emplace_back(topLeft);
                         //updates all squares that have been checked to the checkMap
                         //std::cout << "checked from top left" << std::endl;
                         checkCount++;
@@ -1622,7 +3075,7 @@ struct Board
             int bottomLeft = p + 7 * i;
             if (Pieces[bottomLeft].type == PieceType::Empty)
             {
-                tempSquares.push_back(bottomLeft);
+                tempSquares.emplace_back(bottomLeft);
             }
             else
             {
@@ -1631,7 +3084,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (Pieces[bottomLeft].type == PieceType::Bishop || Pieces[bottomLeft].type == PieceType::Queen)
                     {
-                        tempSquares.push_back(bottomLeft);
+                        tempSquares.emplace_back(bottomLeft);
                         //updates all squares that have been checked to the checkMap
                         //std::cout << "checked from bottom left" << std::endl;
                         checkCount++;
@@ -1657,7 +3110,7 @@ struct Board
             int topRight = p - 7 * i;
             if (Pieces[topRight].type == PieceType::Empty)
             {
-                tempSquares.push_back(topRight);
+                tempSquares.emplace_back(topRight);
             }
             else
             {
@@ -1666,7 +3119,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (Pieces[topRight].type == PieceType::Bishop || Pieces[topRight].type == PieceType::Queen)
                     {
-                        tempSquares.push_back(topRight);
+                        tempSquares.emplace_back(topRight);
                         //updates all squares that have been checked to the checkMap
                         //std::cout << "checked from top right" << std::endl;
                         checkCount++;
@@ -1692,7 +3145,7 @@ struct Board
             int bottomRight = p + 9 * i;
             if (Pieces[bottomRight].type == PieceType::Empty)
             {
-                tempSquares.push_back(bottomRight);
+                tempSquares.emplace_back(bottomRight);
             }
             else
             {
@@ -1701,7 +3154,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (Pieces[bottomRight].type == PieceType::Bishop || Pieces[bottomRight].type == PieceType::Queen)
                     {
-                        tempSquares.push_back(bottomRight);
+                        tempSquares.emplace_back(bottomRight);
                         //updates all squares that have been checked to the checkMap
                         //std::cout << "checked from bottom right" << std::endl;
                         checkCount++;
@@ -1933,6 +3386,7 @@ struct Board
         }
 
         std::vector<int> tempSquares;
+        tempSquares.reserve(8);
         bool hitOurPiece = false;
 
         //Left
@@ -1948,7 +3402,7 @@ struct Board
             int left = p - 1 * i;
             if (Pieces[left].type == PieceType::Empty)
             {
-                tempSquares.push_back(left);
+                tempSquares.emplace_back(left);
                 hitEnPassantPawn = false;
                 hitOurPawn = false;
             }
@@ -1978,7 +3432,7 @@ struct Board
                             }
                             else
                             {
-                                tempSquares.push_back(left);
+                                tempSquares.emplace_back(left);
                                 //updates all squares that have been checked to the pinmap
                                 for (int i = 0; i < tempSquares.size(); i++)
                                 {
@@ -2009,7 +3463,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(left);
+                        tempSquares.emplace_back(left);
                         hitOurPiece = true;
                     }
                     else
@@ -2030,7 +3484,7 @@ struct Board
             int top = p - 8 * i;
             if (Pieces[top].type == PieceType::Empty)
             {
-                tempSquares.push_back(top);
+                tempSquares.emplace_back(top);
             }
             else
             {
@@ -2039,7 +3493,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (hitOurPiece && (Pieces[top].type == PieceType::Rook || Pieces[top].type == PieceType::Queen))
                     {
-                        tempSquares.push_back(top);
+                        tempSquares.emplace_back(top);
                         //updates all squares that have been checked to the pinmap
                         for (int i = 0; i < tempSquares.size(); i++)
                         {
@@ -2053,7 +3507,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(top);
+                        tempSquares.emplace_back(top);
                         hitOurPiece = true;
                     }
                     else
@@ -2080,7 +3534,7 @@ struct Board
             int right = p + 1 * i;
             if (Pieces[right].type == PieceType::Empty)
             {
-                tempSquares.push_back(right);
+                tempSquares.emplace_back(right);
                 hitEnPassantPawn = false;
                 hitOurPawn = false;
             }
@@ -2110,7 +3564,7 @@ struct Board
                             }
                             else
                             {
-                                tempSquares.push_back(right);
+                                tempSquares.emplace_back(right);
                                 //updates all squares that have been checked to the pinmap
                                 for (int i = 0; i < tempSquares.size(); i++)
                                 {
@@ -2141,7 +3595,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(right);
+                        tempSquares.emplace_back(right);
                         hitOurPiece = true;
                     }
                     else
@@ -2168,7 +3622,7 @@ struct Board
             {
                 hitEnPassantPawn = false;
                 hitOurPawn = false;
-                tempSquares.push_back(right);
+                tempSquares.emplace_back(right);
             }
             else
             {
@@ -2190,7 +3644,7 @@ struct Board
                         //hit enemy piece after seeing 1 of our pieces
                         if (hitOurPiece && (Pieces[right].type == PieceType::Rook || Pieces[right].type == PieceType::Queen))
                         {
-                            tempSquares.push_back(right);
+                            tempSquares.emplace_back(right);
                             //updates all squares that have been checked to the pinmap
                             for (int i = 0; i < tempSquares.size(); i++)
                             {
@@ -2220,7 +3674,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(right);
+                        tempSquares.emplace_back(right);
                         hitOurPiece = true;
                     }
                     else
@@ -2241,7 +3695,7 @@ struct Board
             int bottom = p + 8 * i;
             if (Pieces[bottom].type == PieceType::Empty)
             {
-                tempSquares.push_back(bottom);
+                tempSquares.emplace_back(bottom);
             }
             else
             {
@@ -2250,7 +3704,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (hitOurPiece && (Pieces[bottom].type == PieceType::Rook || Pieces[bottom].type == PieceType::Queen))
                     {
-                        tempSquares.push_back(bottom);
+                        tempSquares.emplace_back(bottom);
                         //updates all squares that have been checked to the pinmap
                         for (int i = 0; i < tempSquares.size(); i++)
                         {
@@ -2264,7 +3718,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(bottom);
+                        tempSquares.emplace_back(bottom);
                         hitOurPiece = true;
                     }
                     else
@@ -2285,7 +3739,7 @@ struct Board
             int topLeft = p - 9 * i;
             if (Pieces[topLeft].type == PieceType::Empty)
             {
-                tempSquares.push_back(topLeft);
+                tempSquares.emplace_back(topLeft);
             }
             else
             {
@@ -2294,7 +3748,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (hitOurPiece && (Pieces[topLeft].type == PieceType::Bishop || Pieces[topLeft].type == PieceType::Queen))
                     {
-                        tempSquares.push_back(topLeft);
+                        tempSquares.emplace_back(topLeft);
                         //updates all squares that have been checked to the pinmap
                         for (int i = 0; i < tempSquares.size(); i++)
                         {
@@ -2308,7 +3762,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(topLeft);
+                        tempSquares.emplace_back(topLeft);
                         hitOurPiece = true;
                     }
                     else
@@ -2329,7 +3783,7 @@ struct Board
             int bottomLeft = p + 7 * i;
             if (Pieces[bottomLeft].type == PieceType::Empty)
             {
-                tempSquares.push_back(bottomLeft);
+                tempSquares.emplace_back(bottomLeft);
             }
             else
             {
@@ -2338,7 +3792,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (hitOurPiece && (Pieces[bottomLeft].type == PieceType::Bishop || Pieces[bottomLeft].type == PieceType::Queen))
                     {
-                        tempSquares.push_back(bottomLeft);
+                        tempSquares.emplace_back(bottomLeft);
                         //updates all squares that have been checked to the pinmap
                         for (int i = 0; i < tempSquares.size(); i++)
                         {
@@ -2352,7 +3806,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(bottomLeft);
+                        tempSquares.emplace_back(bottomLeft);
                         hitOurPiece = true;
                     }
                     else
@@ -2373,7 +3827,7 @@ struct Board
             int topRight = p - 7 * i;
             if (Pieces[topRight].type == PieceType::Empty)
             {
-                tempSquares.push_back(topRight);
+                tempSquares.emplace_back(topRight);
             }
             else
             {
@@ -2382,7 +3836,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (hitOurPiece && (Pieces[topRight].type == PieceType::Bishop || Pieces[topRight].type == PieceType::Queen))
                     {
-                        tempSquares.push_back(topRight);
+                        tempSquares.emplace_back(topRight);
                         //updates all squares that have been checked to the pinmap
                         for (int i = 0; i < tempSquares.size(); i++)
                         {
@@ -2396,7 +3850,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(topRight);
+                        tempSquares.emplace_back(topRight);
                         hitOurPiece = true;
                     }
                     else
@@ -2417,7 +3871,7 @@ struct Board
             int bottomRight = p + 9 * i;
             if (Pieces[bottomRight].type == PieceType::Empty)
             {
-                tempSquares.push_back(bottomRight);
+                tempSquares.emplace_back(bottomRight);
             }
             else
             {
@@ -2426,7 +3880,7 @@ struct Board
                     //hit enemy piece after seeing 1 of our pieces
                     if (hitOurPiece && (Pieces[bottomRight].type == PieceType::Bishop || Pieces[bottomRight].type == PieceType::Queen))
                     {
-                        tempSquares.push_back(bottomRight);
+                        tempSquares.emplace_back(bottomRight);
                         //updates all squares that have been checked to the pinmap
                         for (int i = 0; i < tempSquares.size(); i++)
                         {
@@ -2440,7 +3894,7 @@ struct Board
                     if (!hitOurPiece)
                     {
                         //passed through first of our pieces
-                        tempSquares.push_back(bottomRight);
+                        tempSquares.emplace_back(bottomRight);
                         hitOurPiece = true;
                     }
                     else
@@ -2456,8 +3910,7 @@ struct Board
 
     float evaluate()
     {
-        debug++;
-        float pieceTableMult = 0.01f;
+        float pieceTableMult = 0.02f;
 
         float eval = 0.0f;
 
@@ -2485,13 +3938,13 @@ struct Board
         //0 == white king side   1 == white queen side  2 = black king side 3 = black queen side
         for (int i = 0; i < 4; i++)
         {
-            randomHashValuesCastle.push_back(randomNums(gen));
+            randomHashValuesCastle.emplace_back(randomNums(gen));
             hash ^= randomHashValuesCastle[i];
         }
 
         for (int i = 0; i < 8; i++)
         {
-            randomHashValuesEP.push_back(randomNums(gen));
+            randomHashValuesEP.emplace_back(randomNums(gen));
         }
 
         randomHashValuesIsBlack = randomNums(gen);
@@ -2502,7 +3955,7 @@ struct Board
             for (int j = 0; j < 12; j++)
             {
                 uint32_t num = randomNums(gen);
-                temp.push_back(num);
+                temp.emplace_back(num);
             }
             if (Pieces[i].type != PieceType::Empty)
             {
@@ -2513,13 +3966,16 @@ struct Board
                 }
                 hash ^= temp[t];
             }
-            randomHashValues.push_back(temp);
+            randomHashValues.emplace_back(temp);
         }
     }
 
-    std::vector<std::vector<int>> LegalMoves(bool isBlack)
+    std::vector<move> LegalMoves(bool isBlack)
     {
-        std::vector<std::vector<int>> legalMoves(64, std::vector<int>());
+        debug = 0;
+        debug2 = 0;
+        std::vector<move> moves;
+        moves.reserve(50);
 
         bool checked = false;
         bool doubleChecked = false;
@@ -2534,131 +3990,57 @@ struct Board
         {
             checked = inCheck(wKing, false);
         }
-        //optimize VV
-
-        
-        /*if (checked)
-        {
-            checkMap = genCheckMap(isBlack, doubleChecked);
-        }*/
-
-        //optimize VV
-        /*std::vector<bool> attack = genAttackMap(!isBlack);*/
 
         std::vector<int> pin = genPinMap(isBlack);
 
-        /*std::cout << "white " << whitePieces.size();
-        for (int i = 0; i < whitePieces.size(); i++)
+        std::vector<move> posMoves = possibleMoves(isBlack);
+
+        for (int i = 0; i < posMoves.size(); i++)
         {
-            std::cout << i << " = " << whitePieces[i] << std::endl;
-        }*/
-
-
-
-        for (int i = 0; i < Pieces.size(); i++)
-        {
-            //int p = i;
-            if (Pieces[i].isBlack == blackTurn)
+            if (doubleChecked)
             {
-                std::vector<int> moves;
-
-                if (doubleChecked)
+                if (Pieces[posMoves[i].from].type == PieceType::King)
                 {
                     std::vector<bool> attack = genAttackMap(!isBlack);
-                    if (Pieces[i].type == PieceType::King)
+
+                    if (!attack[posMoves[i].to])
                     {
-                        std::vector<int> posMoves = possibleMoves(i, false);
-                        for (int j = 0; j < posMoves.size(); j++)
-                        {
-                            if (!attack[posMoves[j]])
-                            {
-                                moves.push_back(posMoves[j]);
-                            }
-                        }
-                        legalMoves[i] = moves;
-                        break;
+                        moves.emplace_back(posMoves[i]);
                     }
                 }
-                else if (checked)
+            }
+            else if (checked)
+            {
+                if (Pieces[posMoves[i].from].type == PieceType::King)
                 {
                     std::vector<bool> attack = genAttackMap(!isBlack);
-                    if (Pieces[i].type == PieceType::King)
-                    {
-                        std::vector<int> posMoves = possibleMoves(i, false);
-                        for (int j = 0; j < posMoves.size(); j++)
-                        {
-                            if (!attack[posMoves[j]])
-                            {
-                                moves.push_back(posMoves[j]);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        checkMap = genCheckMap(isBlack, doubleChecked);
-                        std::vector<int> posMoves = possibleMoves(i, false);
-                        for (int j = 0; j < posMoves.size(); j++)
-                        {
-                            //not pinned
-                            if (pin[i] == 0)
-                            {
-                                
-                                //moving between king and the checking piece or taking checking piece
-                                if (checkMap[posMoves[j]] == true)
-                                {
-                                    if (posMoves[j] == enPassant)
-                                    {
-                                        if (Pieces[i].type == PieceType::Pawn)
-                                        {
-                                            moves.push_back(posMoves[j]);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (Pieces[i].type == PieceType::Pawn && (posMoves[j] >= 56 || posMoves[j] <= 7))
-                                        {
-                                            int direction = -1;
-                                            if (Pieces[i].isBlack)
-                                            {
-                                                direction = 1;
-                                            }
 
-                                            moves.push_back(posMoves[j] + (8 * direction * 1));
-                                            moves.push_back(posMoves[j] + (8 * direction * 2));
-                                            moves.push_back(posMoves[j] + (8 * direction * 3));
-                                        }
-                                        moves.push_back(posMoves[j]);
-                                    }
-                                }
-                            }
-                        }
+                    if (!attack[posMoves[i].to])
+                    {
+                        moves.emplace_back(posMoves[i]);
                     }
                 }
                 else
                 {
-                    if (Pieces[i].type == PieceType::King)
+                    checkMap = genCheckMap(isBlack, doubleChecked);
+
+                    if (pin[posMoves[i].from] == 0) // if not pinned
                     {
-                        std::vector<bool> attack = genAttackMap(!isBlack);
-                        std::vector<int> posMoves = possibleMoves(i, false);
-                        for (int j = 0; j < posMoves.size(); j++)
+                        //moving between king and the checking piece or taking checking piece
+                        if (checkMap[posMoves[i].to] == true)
                         {
-                            if (!attack[posMoves[j]])
+                            if (posMoves[i].to == enPassant)
                             {
-                                moves.push_back(posMoves[j]);
+                                if (Pieces[posMoves[i].from].type == PieceType::Pawn)
+                                {
+                                    moves.emplace_back(posMoves[i]);
+                                    // PROBPAOSKDPAOWDKQPWOEKQPWOEK QWFIX FIX FIX WHY AM I DUMB IT DOESNT ALLOW NONE PAWNS TO BLOCK CHECK ON THE ENPASSANT SQUARE
+                                    //MAYBE NOT?
+                                }
                             }
-                        }
-                    }
-                    else
-                    {
-                        //optimize VV
-                        std::vector<int> posMoves = possibleMoves(i, false);
-                        //optimize VV
-                        for (int j = 0; j < posMoves.size(); j++)
-                        {
-                            //not pinned
-                            if (pin[i] == 0)
+                            else
                             {
-                                if (Pieces[i].type == PieceType::Pawn && (posMoves[j] >= 56 || posMoves[j] <= 7))
+                                if (Pieces[posMoves[i].from].type == PieceType::Pawn && (posMoves[i].to >= 56 || posMoves[i].to <= 7))
                                 {
                                     int direction = -1;
                                     if (Pieces[i].isBlack)
@@ -2666,36 +4048,65 @@ struct Board
                                         direction = 1;
                                     }
 
-                                    moves.push_back(posMoves[j] + (8 * direction * 1));
-                                    moves.push_back(posMoves[j] + (8 * direction * 2));
-                                    moves.push_back(posMoves[j] + (8 * direction * 3));
+                                    moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 1), 0));
+                                    moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 2), 0));
+                                    moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 3), 0));
                                 }
-
-                                moves.push_back(posMoves[j]);
-                            }
-                            else if (pin[i] != 0)
-                            {
-                                //special case for en passant
-                                if (pin[i] == 9)
-                                {
-                                    if (posMoves[j] != enPassant)
-                                    {
-                                        moves.push_back(posMoves[j]);
-                                    }
-                                }
-                                if (pin[i] == pin[posMoves[j]])
-                                {
-                                    moves.push_back(posMoves[j]);
-                                }
+                                moves.emplace_back(posMoves[i]);
                             }
                         }
                     }
                 }
+            }
+            else
+            {
+                if (Pieces[posMoves[i].from].type == PieceType::King)
+                {
+                    std::vector<bool> attack = genAttackMap(!isBlack);
 
-                legalMoves[i] = moves;
+                    if (!attack[posMoves[i].to])
+                    {
+                        moves.emplace_back(posMoves[i]);
+                    }
+                }
+                else
+                {
+                    
+                    if (pin[posMoves[i].from] == 0)
+                    {
+                        if (Pieces[posMoves[i].from].type == PieceType::Pawn && (posMoves[i].to >= 56 || posMoves[i].to <= 7))
+                        {
+                            int direction = -1;
+                            if (Pieces[i].isBlack)
+                            {
+                                direction = 1;
+                            }
+
+                            moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 1), 0));
+                            moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 2), 0));
+                            moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 3), 0));
+                        }
+                        moves.emplace_back(posMoves[i]);
+                    }
+                    else if (pin[posMoves[i].from] != 0)
+                    {
+                        //special case for en passant
+                        if (pin[posMoves[i].from] == 9)
+                        {
+                            if (posMoves[i].to != enPassant)
+                            {
+                                moves.emplace_back(posMoves[i]);
+                            }
+                        }
+                        if (pin[posMoves[i].from] == pin[posMoves[i].to])
+                        {
+                            moves.emplace_back(posMoves[i]);
+                        }
+                    }
+                }
             }
         }
-        return legalMoves;
+        return moves;
     }
 
     void Move(int from, int to)
@@ -2704,7 +4115,6 @@ struct Board
         std::cout << "black " << blackPieceTable << std::endl;
         std::cout << "white " << whitePieceTable << std::endl;*/
 
-        debug2++;
         if (Pieces[from].isBlack)
         {
             blackPieceTable -= pTables[Pieces[from].type - 1][63 - from];
@@ -2714,17 +4124,7 @@ struct Board
             whitePieceTable -= pTables[Pieces[from].type - 1][from];
         }
 
-        if (Pieces[to].type != PieceType::Empty)
-        {
-            if (Pieces[to].isBlack)
-            {
-                blackPieceTable -= pTables[Pieces[from].type - 1][63 - from];
-            }
-            else
-            {
-                whitePieceTable -= pTables[Pieces[from].type - 1][from];
-            }
-        }
+        
 
         //white promoting
         if (Pieces[from].type == PieceType::Pawn &&  to < 8)
@@ -2803,10 +4203,12 @@ struct Board
             if (Pieces[to].isBlack)
             {
                 pieceDiffenece += pVal[Pieces[to].type];
+                blackPieceTable -= pTables[Pieces[from].type - 1][63 - from];
             }
             else
             {
                 pieceDiffenece -= pVal[Pieces[to].type];
+                whitePieceTable -= pTables[Pieces[from].type - 1][from];
             }
         }
 
@@ -2976,24 +4378,21 @@ struct Board
         hash ^= randomHashValuesIsBlack;
         blackTurn = !blackTurn;
 
-        /*std::cout << "new black " << blackPieceTable << std::endl;
-        std::cout << "new white " << whitePieceTable << std::endl;*/
     }
 };
 
 int perft(Board b, int depth)
 {
-    std::vector<std::vector<int>> moves = b.LegalMoves(b.blackTurn);
-   
+    //std::vector<std::vector<int>> moves = b.LegalMoves(b.blackTurn);
+
+    std::vector<move> moves = b.LegalMoves(b.blackTurn);
 
     if (depth == 0)
     {
         int size = 0;
 
-        for (int i = 0; i < moves.size(); i++)
-        {
-            size += moves[i].size();
-        }
+        size += moves.size();
+        
         return size;
     }
 
@@ -3001,119 +4400,191 @@ int perft(Board b, int depth)
 
     for (int i = 0; i < moves.size(); i++)
     {
-        for (int j = 0; j < moves[i].size(); j++)
-        {
-            Board bc = b;
-            bc.Move(i, moves[i][j]);
-            count += perft(bc, depth - 1);
-        }
+        Board bc = b;
+        bc.Move(moves[i].from, moves[i].to);
+        count += perft(bc, depth - 1);
     }
     return count;
 }
 
 float Minimax(float alpha, float beta, int depth, Board board, int qDepth)
 {
-    std::vector<std::vector<int>> moves;
+    std::vector<move> moves;
+
+    //std::cout << depth << " : " << qDepth << std::endl;
 
     float maxEval = -INFINITY;
     float minEval = INFINITY;
 
-    if (depth == 0)
+    if (board.transpositionTable->find(board.hash) != board.transpositionTable->end() && board.transpositionTable->at(board.hash).depth >= depth)
     {
-        if (qDepth == 0)
+        return board.transpositionTable->at(board.hash).eval;
+    }
+    else
+    {
+        if (board.transpositionTable->find(board.hash) != board.transpositionTable->end())
         {
-            
-            return board.evaluate();
-        }
-        else
-        {
+            moves = board.transpositionTable->at(board.hash).moves;
 
-            moves = board.LegalMoves(board.blackTurn);
-            for (int i = 0; i < moves.size(); i++)
+            std::sort(moves.begin(), moves.end(), compare);
+        }
+        if (depth == 0)
+        {
+            if (qDepth == 0)
             {
-                for (int j = 0; j < moves[i].size(); j++)
+                float eval = board.evaluate();
+
+                moveInfo temp;
+                temp.eval = eval;
+                temp.depth = 0;
+                temp.moves = moves;
+
+                board.transpositionTable->insert(std::make_pair(board.hash, temp));
+                return eval;
+            }
+            else
+            {
+                if (!board.blackTurn)
                 {
-                    if (board.Pieces[moves[i][j]].type != PieceType::Empty && board.Pieces[moves[i][j]].isBlack != board.blackTurn)
+                    moves = board.LegalMoves(board.blackTurn);
+
+                    std::sort(moves.begin(), moves.end(), compare);
+
+                    maxEval = -INFINITY;
+
+                    for (int i = 0; i < moves.size(); i++)
                     {
-                        if (!board.blackTurn)
+                        // PROBLEM WITH PROMOTION NEGATIVE NUMBERS.TYPE BEING CHECKED IF EMPTY WHEN USING QUIENCESE SEARCH
+                        
+                        if (board.Pieces[moves[i].to].type != PieceType::Empty)
                         {
                             Board b = board;
-                            b.Move(i, moves[i][j]);
-                            float eval = Minimax(alpha, beta, 0, b, qDepth - 1);
+                            b.Move(moves[i].from, moves[i].to);
+                            float eval = Minimax(alpha, beta, depth, b, qDepth - 1);
 
                             maxEval = std::max(maxEval, eval);
 
-                            alpha = std::max(alpha, eval);
+                            alpha = std::max(alpha, maxEval);
                             if (beta <= alpha)
                             {
                                 break;
                             }
-                            return maxEval;
-                        }
-                        else
-                        {
-                            Board b = board;
-                            b.Move(i, moves[i][j]);
-                            float eval = Minimax(alpha, beta, 0, b, qDepth - 1);
-
-                            minEval = std::min(minEval, eval);
-                            alpha = std::min(beta, eval);
-                            if (beta <= alpha)
-                            {
-                                break;
-                            }
-                            return minEval;
                         }
                     }
-                }
-            }
 
-            return board.evaluate();
+                    moveInfo temp;
+                    temp.eval = maxEval;
+                    temp.depth = depth;
+                    temp.moves = moves;
+                    board.transpositionTable->insert(std::make_pair(board.hash, temp));
+
+                    if (maxEval == -INFINITY)
+                    {
+                        return board.evaluate();
+                    }
+                    return maxEval;
+                }
+                else
+                {
+                    moves = board.LegalMoves(board.blackTurn);
+
+                    std::sort(moves.begin(), moves.end(), compare);
+
+                    minEval = INFINITY;
+
+                    for (int i = 0; i < moves.size(); i++)
+                    {
+                        if (board.Pieces[moves[i].to].type != PieceType::Empty)
+                        {
+                            Board b = board;
+                            b.Move(moves[i].from, moves[i].to);
+                            float eval = Minimax(alpha, beta, depth, b, qDepth - 1);
+
+                            minEval = std::min(minEval, eval);
+                            beta = std::min(beta, minEval);
+                            if (beta <= alpha)
+                            {
+                                break;
+                            }
+                        }
+
+                    }
+                    moveInfo temp;
+                    temp.eval = minEval;
+                    temp.depth = depth;
+                    temp.moves = moves;
+                    board.transpositionTable->insert(std::make_pair(board.hash, temp));
+
+                    if (minEval == INFINITY)
+                    {
+                        return board.evaluate();
+                    }
+                    return minEval;
+                }
+                return board.evaluate();
+            }
         }
-    }
-    else if (!board.blackTurn)
-    {
-        moves = board.LegalMoves(board.blackTurn);
-        for (int i = 0; i < moves.size(); i++)
+        else if (!board.blackTurn)
         {
-            for (int j = 0; j < moves[i].size(); j++)
+            moves = board.LegalMoves(board.blackTurn);
+
+            std::sort(moves.begin(), moves.end(), compare);
+
+            maxEval = -INFINITY;
+
+            for (int i = 0; i < moves.size(); i++)
             {
                 Board b = board;
-                b.Move(i, moves[i][j]);
+                b.Move(moves[i].from, moves[i].to);
                 float eval = Minimax(alpha, beta, depth - 1, b, qDepth);
 
                 maxEval = std::max(maxEval, eval);
 
-                alpha = std::max(alpha, eval);
+                alpha = std::max(alpha, maxEval);
                 if (beta <= alpha)
                 {
                     break;
                 }
-                
             }
+
+            moveInfo temp;
+            temp.eval = maxEval;
+            temp.depth = depth;
+            temp.moves = moves;
+            board.transpositionTable->insert(std::make_pair(board.hash, temp));
+
+            return maxEval;
         }
-        return maxEval;
-    }
-    else
-    {
-        moves = board.LegalMoves(board.blackTurn);
-        for (int i = 0; i < moves.size(); i++)
+        else
         {
-            for (int j = 0; j < moves[i].size(); j++)
+            moves = board.LegalMoves(board.blackTurn);
+
+            std::sort(moves.begin(), moves.end(), compare);
+
+            minEval = INFINITY;
+
+            for (int i = 0; i < moves.size(); i++)
             {
                 Board b = board;
-                b.Move(i, moves[i][j]);
+                b.Move(moves[i].from, moves[i].to);
                 float eval = Minimax(alpha, beta, depth - 1, b, qDepth);
 
                 minEval = std::min(minEval, eval);
-                alpha = std::min(beta, eval);
+                beta = std::min(beta, minEval);
                 if (beta <= alpha)
                 {
                     break;
                 }
+
             }
+            moveInfo temp;
+            temp.eval = minEval;
+            temp.depth = depth;
+            temp.moves = moves;
+            board.transpositionTable->insert(std::make_pair(board.hash, temp));
+
+            return minEval;
         }
-        return minEval;
     }
 }
 
@@ -3138,18 +4609,18 @@ int main()
 
     Sprite bPawn(bp), bKnight(bn), bBishop(bb), bRook(br), bQueen(bq), bKing(bk), wPawn(wp), wKnight(wn), wBishop(wb), wRook(wr), wQueen(wq), wKing(wk);
     std::vector<Sprite> sprites;
-    sprites.push_back(wPawn);
-    sprites.push_back(wKnight);
-    sprites.push_back(wBishop);
-    sprites.push_back(wRook);
-    sprites.push_back(wQueen);
-    sprites.push_back(wKing);
-    sprites.push_back(bPawn);
-    sprites.push_back(bKnight);
-    sprites.push_back(bBishop);
-    sprites.push_back(bRook);
-    sprites.push_back(bQueen);
-    sprites.push_back(bKing);
+    sprites.emplace_back(wPawn);
+    sprites.emplace_back(wKnight);
+    sprites.emplace_back(wBishop);
+    sprites.emplace_back(wRook);
+    sprites.emplace_back(wQueen);
+    sprites.emplace_back(wKing);
+    sprites.emplace_back(bPawn);
+    sprites.emplace_back(bKnight);
+    sprites.emplace_back(bBishop);
+    sprites.emplace_back(bRook);
+    sprites.emplace_back(bQueen);
+    sprites.emplace_back(bKing);
 
     for (int i = 0; i < sprites.size(); i++)
     {
@@ -3165,8 +4636,6 @@ int main()
 
     board.initHash();
 
-    
-
     bool prevlClick = false; 
 
     int selectedSquare = -1;
@@ -3174,11 +4643,20 @@ int main()
     std::vector<int> posMoves;
     bool lClick = false;
 
-    for (int i = 0; i < 0; i++)
+    for (int i = 0; i < 3; i++)
     {
         auto t1 = std::chrono::high_resolution_clock::now();
 
         std::cout << "perft " << i << ": " << perft(board, i);
+
+        for (int i = 0; i < 100; i++)
+        {
+            //std::vector<int> pin = board.genPinMap(true); //100 0.08~ // emplace 100 = 0.02~
+            //std::vector<move> asdqw = board.LegalMoves(true); //100 = 0.35~ // emplace 100 = 0.17~
+            //std::vector<move> asdqw = board.possibleMoves(true); //100 = 0.13~ // emplace 100 = 0.05~
+        }
+        
+        
 
         auto t2 = std::chrono::high_resolution_clock::now();
 
@@ -3200,10 +4678,20 @@ int main()
         {
             lClick = sf::Mouse::isButtonPressed(sf::Mouse::Left);
         }
-        /*
+
         if (board.blackTurn)
         {
-            std::vector<std::vector<int>> allMoves = board.LegalMoves(board.blackTurn);
+            std::vector<move> moves = board.LegalMoves(board.blackTurn);
+            std::sort(moves.begin(), moves.end(), compare);
+
+            std::vector<int> d;
+
+            std::vector<std::vector<int>> allMoves(64, d);
+
+            for (int i = 0; i < moves.size(); i++)
+            {
+                allMoves[moves[i].from].emplace_back(moves[i].to);
+            }
 
             bool hasMoves = false;
 
@@ -3234,7 +4722,7 @@ int main()
 
                         Board b = board;
                         b.Move(i, allMoves[i][j]);
-                        float temp = Minimax(-INFINITY, INFINITY, 3, b, 0);
+                        float temp = Minimax(-INFINITY, INFINITY, 4, b, 1);
                         if (temp <= bestMoveE)
                         {
                             bestMoveA = i;
@@ -3243,7 +4731,6 @@ int main()
                         }
                     }
                 }
-
                 auto t2 = std::chrono::high_resolution_clock::now();
 
                 std::chrono::duration<double, std::milli> ms_double = t2 - t1;
@@ -3256,6 +4743,7 @@ int main()
                 std::cout << "debug: " << debug << std::endl;
                 std::cout << "debug2 : " << debug2 << std::endl;
 
+                transpositionTable.clear();
 
                 //board.Move(rand1, allMoves[rand1][rand2]);
             }
@@ -3270,7 +4758,6 @@ int main()
                 {
                     k = board.wKing;
                 }
-
                 if (board.inCheck(k, board.blackTurn))
                 {
                     std::cout << "Checkmate" << std::endl;
@@ -3282,11 +4769,11 @@ int main()
             }
         }
 
-        */
-
         if (lClick != prevlClick && lClick)
         {
             std::cout << board.hash << std::endl;
+
+            std::cout << "hash table size: " << transpositionTable.size() << std::endl;
             int x = floor(sf::Mouse::getPosition(app).x / 64);
             int y = floor(sf::Mouse::getPosition(app).y / 64);
             /*
@@ -3373,7 +4860,17 @@ int main()
             {
                 if (selectedSquare == -1)
                 {
-                    posMoves = board.LegalMoves(board.blackTurn)[(y * 8) + x];
+                    std::vector<move> moves = board.LegalMoves(board.blackTurn);
+                    std::vector<int> d;
+
+                    std::vector<std::vector<int>> allMoves(64, d);
+
+                    for (int i = 0; i < moves.size(); i++)
+                    {
+                        allMoves[moves[i].from].emplace_back(moves[i].to);
+                    }
+
+                    posMoves = allMoves[(y * 8) + x];
                     //posMoves = board.possibleMoves((y * 8) + x, false);
                     selectedSquare = (y * 8) + x;
                 }
@@ -3404,7 +4901,18 @@ int main()
                         }
                         else
                         {
-                            posMoves = board.LegalMoves(board.blackTurn)[(y * 8) + x];
+                            std::vector<move> moves = board.LegalMoves(board.blackTurn);
+
+                            std::vector<int> d;
+
+                            std::vector<std::vector<int>> allMoves(64, d);
+
+                            for (int i = 0; i < moves.size(); i++)
+                            {
+                                allMoves[moves[i].from].emplace_back(moves[i].to);
+                            }
+
+                            posMoves = allMoves[(y * 8) + x];
                             selectedSquare = (y * 8) + x;
                         }
                         
@@ -3420,7 +4928,6 @@ int main()
         app.clear(Color::White);
 
         int size = board.Pieces.size();
-
         for (int i = 0; i < size; i++)
         {
             RectangleShape s;
@@ -3473,6 +4980,7 @@ int main()
                 app.draw(sprites[sprite]);
             }
         }
+        
         app.display();
     }
     return 0;
