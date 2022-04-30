@@ -34,6 +34,19 @@ struct move
         priority = p;
     }
 
+    bool operator==(const move& a)
+    {
+        if ((a.from == from) && (a.to == to))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+
 };
 
 struct moveInfo
@@ -89,7 +102,11 @@ std::vector<uint32_t> randomHashValuesCastle;
 
 std::vector<uint32_t> randomHashValuesEP;
 
+std::unordered_map<uint32_t, move> PVMoves;
+
 uint32_t randomHashValuesIsBlack;
+
+//std::unordered_map<uint32_t, int> previousPositions;
 
 std::vector<int> pawnTable =
 {
@@ -160,7 +177,7 @@ std::vector<int> kingTable =
     -20,-30,-30,-40,-40,-30,-30,-20,
     -10,-20,-20,-20,-20,-20,-20,-10,
     20, 20,  0,  0,  0,  0, 20, 20,
-    20, 30, 10,  0,  0, 10, 30, 20
+    20, 35, 10,  0,  0, 10, 35, 20
 };
 
 std::vector<std::vector<int>> pTables = { pawnTable, knightTable, bishopTable, rookTable, queenTable, kingTable };
@@ -171,6 +188,8 @@ std::vector<float> pVal = { 0.0f, 1.0f, 3.0f, 3.0f, 5.0f, 9.0f, 1000.0f };
 struct Board
 {
     std::unordered_map<uint32_t, moveInfo>* transpositionTable;
+
+    std::unordered_map<uint32_t, int> previousPositions;
 
     std::vector<Piece> Pieces;
 
@@ -186,12 +205,21 @@ struct Board
     int bKing = 4;
     int wKing = 60;
 
-    float blackPieceTable = -95.0f;
-    float whitePieceTable = -95.0f;
+    int blackVisibility = 0;
+    int whiteVisibility = 0;
+
+    float blackPieceTable = 0.0f;
+    float whitePieceTable = 0.0f;
 
     float pieceDiffenece = 0.0f;
 
+    bool forcedDraw = false;
+
+    int lastMovedToSquare = -1;
+
     uint32_t hash = 0;
+
+    int halfMoveCount = 0;
 
     //std::vector<int> pinnedMask;
 
@@ -1412,7 +1440,6 @@ struct Board
 
     std::vector<move> possibleMoves(bool isBlack)
     {
-        debug2++;
         std::vector<move> moves;
 
         moves.reserve(70);
@@ -1467,7 +1494,7 @@ struct Board
                                     // limit to edges of the board on ranks 1 and 8
                                     if (p % 8 != 7)
                                     {
-                                        moves.emplace_back(move(p, SquareDiagRight, pVal[Pieces[SquareDiagRight].type] - (pVal[PieceType::Pawn] / 10)));
+                                        moves.emplace_back(move(p, SquareDiagRight, pVal[Pieces[SquareDiagRight].type] - (pVal[PieceType::Pawn] / 2.0f)));
                                     }
                                 }
                             }
@@ -1485,7 +1512,7 @@ struct Board
                                     // limit to edges of the board on ranks 1 and 8
                                     if (p % 8 != 0)
                                     {
-                                        moves.emplace_back(move(p, SquareDiagLeft, pVal[Pieces[SquareDiagLeft].type] - (pVal[PieceType::Pawn] / 10)));
+                                        moves.emplace_back(move(p, SquareDiagLeft, pVal[Pieces[SquareDiagLeft].type] - (pVal[PieceType::Pawn] / 2.0f)));
                                     }
                                 }
                             }
@@ -1497,7 +1524,7 @@ struct Board
                             // limit to edges of the board on ranks 1 and 8
                             if (p % 8 != 7)
                             {
-                                moves.emplace_back(move(p, SquareDiagRight, pVal[PieceType::Pawn] - (pVal[PieceType::Pawn] / 10)));
+                                moves.emplace_back(move(p, SquareDiagRight, pVal[PieceType::Pawn] - (pVal[PieceType::Pawn] / 2.0f)));
                             }
                         }
 
@@ -1507,7 +1534,7 @@ struct Board
                             // limit to edges of the board on ranks 1 and 8
                             if (p % 8 != 0)
                             {
-                                moves.emplace_back(move(p, SquareDiagLeft, pVal[PieceType::Pawn] - (pVal[PieceType::Pawn] / 10)));
+                                moves.emplace_back(move(p, SquareDiagLeft, pVal[PieceType::Pawn] - (pVal[PieceType::Pawn] / 2.0f)));
                             }
                         }
                     }
@@ -1522,7 +1549,7 @@ struct Board
                             {
                                 if (Pieces[topLeft].type == PieceType::Empty || (Pieces[topLeft].type != Empty && Pieces[topLeft].isBlack != Pieces[p].isBlack))
                                 {
-                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Knight] / 10)));
+                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Knight] / 2.0f)));
                                 }
                             }
                         }
@@ -1535,7 +1562,7 @@ struct Board
                             {
                                 if (Pieces[topRight].type == PieceType::Empty || (Pieces[topRight].type != Empty && Pieces[topRight].isBlack != Pieces[p].isBlack))
                                 {
-                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Knight] / 10)));
+                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Knight] / 2.0f)));
                                 }
                             }
                         }
@@ -1548,7 +1575,7 @@ struct Board
                             {
                                 if (Pieces[leftTop].type == PieceType::Empty || (Pieces[leftTop].type != Empty && Pieces[leftTop].isBlack != Pieces[p].isBlack))
                                 {
-                                    moves.emplace_back(move(p, leftTop, pVal[Pieces[leftTop].type] - (pVal[PieceType::Knight] / 10)));
+                                    moves.emplace_back(move(p, leftTop, pVal[Pieces[leftTop].type] - (pVal[PieceType::Knight] / 2.0f)));
                                 }
                             }
                         }
@@ -1561,7 +1588,7 @@ struct Board
                             {
                                 if (Pieces[leftDown].type == PieceType::Empty || (Pieces[leftDown].type != Empty && Pieces[leftDown].isBlack != Pieces[p].isBlack))
                                 {
-                                    moves.emplace_back(move(p, leftDown, pVal[Pieces[leftDown].type] - (pVal[PieceType::Knight] / 10)));
+                                    moves.emplace_back(move(p, leftDown, pVal[Pieces[leftDown].type] - (pVal[PieceType::Knight] / 2.0f)));
                                 }
                             }
                         }
@@ -1574,7 +1601,7 @@ struct Board
                             {
                                 if (Pieces[rightUp].type == PieceType::Empty || (Pieces[rightUp].type != Empty && Pieces[rightUp].isBlack != Pieces[p].isBlack))
                                 {
-                                    moves.emplace_back(move(p, rightUp, pVal[Pieces[rightUp].type] - (pVal[PieceType::Knight] / 10)));
+                                    moves.emplace_back(move(p, rightUp, pVal[Pieces[rightUp].type] - (pVal[PieceType::Knight] / 2.0f)));
                                 }
                             }
                         }
@@ -1587,7 +1614,7 @@ struct Board
                             {
                                 if (Pieces[rightDown].type == PieceType::Empty || (Pieces[rightDown].type != Empty && Pieces[rightDown].isBlack != Pieces[p].isBlack))
                                 {
-                                    moves.emplace_back(move(p, rightDown, pVal[Pieces[rightDown].type] - (pVal[PieceType::Knight] / 10)));
+                                    moves.emplace_back(move(p, rightDown, pVal[Pieces[rightDown].type] - (pVal[PieceType::Knight] / 2.0f)));
                                 }
                             }
                         }
@@ -1600,7 +1627,7 @@ struct Board
                             {
                                 if (Pieces[downLeft].type == PieceType::Empty || (Pieces[downLeft].type != Empty && Pieces[downLeft].isBlack != Pieces[p].isBlack))
                                 {
-                                    moves.emplace_back(move(p, downLeft, pVal[Pieces[downLeft].type] - (pVal[PieceType::Knight] / 10)));
+                                    moves.emplace_back(move(p, downLeft, pVal[Pieces[downLeft].type] - (pVal[PieceType::Knight] / 2.0f)));
                                 }
                             }
                         }
@@ -1613,7 +1640,7 @@ struct Board
                             {
                                 if (Pieces[downRight].type == PieceType::Empty || (Pieces[downRight].type != Empty && Pieces[downRight].isBlack != Pieces[p].isBlack))
                                 {
-                                    moves.emplace_back(move(p, downRight, pVal[Pieces[downRight].type] - (pVal[PieceType::Knight] / 10)));
+                                    moves.emplace_back(move(p, downRight, pVal[Pieces[downRight].type] - (pVal[PieceType::Knight] / 2.0f)));
                                 }
                             }
                         }
@@ -1633,13 +1660,13 @@ struct Board
                             int topLeft = p - 9 * i;
                             if (Pieces[topLeft].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Bishop] / 10)));
+                                moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Bishop] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Bishop] / 10)));
+                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Bishop] / 2.0f)));
                                     break;
 
                                 }
@@ -1657,13 +1684,13 @@ struct Board
                             int bottomLeft = p + 7 * i;
                             if (Pieces[bottomLeft].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Bishop] / 10)));
+                                moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Bishop] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Bishop] / 10)));
+                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Bishop] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1680,13 +1707,13 @@ struct Board
                             int topRight = p - 7 * i;
                             if (Pieces[topRight].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Bishop] / 10)));
+                                moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Bishop] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[topRight].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Bishop] / 10)));
+                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Bishop] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1703,13 +1730,13 @@ struct Board
                             int bottomRight = p + 9 * i;
                             if (Pieces[bottomRight].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Bishop] / 10)));
+                                moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Bishop] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Bishop] / 10)));
+                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Bishop] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1728,13 +1755,13 @@ struct Board
                             int left = p - 1 * i;
                             if (Pieces[left].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Rook] / 10)));
+                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Rook] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[left].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Rook] / 10)));
+                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Rook] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1751,13 +1778,13 @@ struct Board
                             int top = p - 8 * i;
                             if (Pieces[top].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Rook] / 10)));
+                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Rook] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[top].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Rook] / 10)));
+                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Rook] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1774,13 +1801,13 @@ struct Board
                             int right = p + 1 * i;
                             if (Pieces[right].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Rook] / 10)));
+                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Rook] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[right].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Rook] / 10)));
+                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Rook] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1797,13 +1824,13 @@ struct Board
                             int bottom = p + 8 * i;
                             if (Pieces[bottom].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Rook] / 10)));
+                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Rook] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[bottom].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Rook] / 10)));
+                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Rook] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1822,13 +1849,13 @@ struct Board
                             int left = p - 1 * i;
                             if (Pieces[left].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[left].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1845,13 +1872,13 @@ struct Board
                             int top = p - 8 * i;
                             if (Pieces[top].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[top].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1868,13 +1895,13 @@ struct Board
                             int right = p + 1 * i;
                             if (Pieces[right].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[right].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1891,13 +1918,13 @@ struct Board
                             int bottom = p + 8 * i;
                             if (Pieces[bottom].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[bottom].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1914,13 +1941,13 @@ struct Board
                             int topLeft = p - 9 * i;
                             if (Pieces[topLeft].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     break;
 
                                 }
@@ -1938,13 +1965,13 @@ struct Board
                             int bottomLeft = p + 7 * i;
                             if (Pieces[bottomLeft].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1961,13 +1988,13 @@ struct Board
                             int topRight = p - 7 * i;
                             if (Pieces[topRight].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[topRight].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -1984,13 +2011,13 @@ struct Board
                             int bottomRight = p + 9 * i;
                             if (Pieces[bottomRight].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     break;
                                 }
                                 else
@@ -2009,13 +2036,13 @@ struct Board
                             int left = p - 1;
                             if (Pieces[left].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[left].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, left, pVal[Pieces[left].type] - (pVal[PieceType::Queen] / 2.0f)));
                                 }
                             }
 
@@ -2025,13 +2052,13 @@ struct Board
                             {
                                 if (Pieces[topLeft].type == PieceType::Empty)
                                 {
-                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 2.0f)));
                                 }
                                 else
                                 {
                                     if (Pieces[topLeft].isBlack != Pieces[p].isBlack)
                                     {
-                                        moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                        moves.emplace_back(move(p, topLeft, pVal[Pieces[topLeft].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     }
                                 }
                             }
@@ -2042,13 +2069,13 @@ struct Board
                             {
                                 if (Pieces[bottomLeft].type == PieceType::Empty)
                                 {
-                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 2.0f)));
                                 }
                                 else
                                 {
                                     if (Pieces[bottomLeft].isBlack != Pieces[p].isBlack)
                                     {
-                                        moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 10)));
+                                        moves.emplace_back(move(p, bottomLeft, pVal[Pieces[bottomLeft].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     }
                                 }
                             }
@@ -2060,13 +2087,13 @@ struct Board
                         {
                             if (Pieces[top].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[top].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, top, pVal[Pieces[top].type] - (pVal[PieceType::Queen] / 2.0f)));
                                 }
                             }
                         }
@@ -2077,13 +2104,13 @@ struct Board
                         {
                             if (Pieces[bottom].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[bottom].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, bottom, pVal[Pieces[bottom].type] - (pVal[PieceType::Queen] / 2.0f)));
                                 }
                             }
                         }
@@ -2094,13 +2121,13 @@ struct Board
                             int right = p + 1;
                             if (Pieces[right].type == PieceType::Empty)
                             {
-                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 10)));
+                                moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 2.0f)));
                             }
                             else
                             {
                                 if (Pieces[right].isBlack != Pieces[p].isBlack)
                                 {
-                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, right, pVal[Pieces[right].type] - (pVal[PieceType::Queen] / 2.0f)));
                                 }
                             }
 
@@ -2111,13 +2138,13 @@ struct Board
                             {
                                 if (Pieces[topRight].type == PieceType::Empty)
                                 {
-                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 2.0f)));
                                 }
                                 else
                                 {
                                     if (Pieces[topRight].isBlack != Pieces[p].isBlack)
                                     {
-                                        moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 10)));
+                                        moves.emplace_back(move(p, topRight, pVal[Pieces[topRight].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     }
                                 }
                             }
@@ -2128,13 +2155,13 @@ struct Board
                             {
                                 if (Pieces[bottomRight].type == PieceType::Empty)
                                 {
-                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 10)));
+                                    moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 2.0f)));
                                 }
                                 else
                                 {
                                     if (Pieces[bottomRight].isBlack != Pieces[p].isBlack)
                                     {
-                                        moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 10)));
+                                        moves.emplace_back(move(p, bottomRight, pVal[Pieces[bottomRight].type] - (pVal[PieceType::Queen] / 2.0f)));
                                     }
                                 }
                             }
@@ -3908,23 +3935,87 @@ struct Board
         return PinMap;
     }
 
+    float kingSafety(bool isBlack)
+    {
+        int direction = -1;
+        int king = wKing;
+        if (isBlack)
+        {
+            direction = 1;
+            king = bKing;
+        }
+        int numShields = 0;
+
+        Piece p = Pieces[king + (direction * 8)];
+        if (p.type != PieceType::Empty && p.isBlack == isBlack)
+        {
+            if (p.type == PieceType::Pawn)
+            {
+                numShields += 3;
+            }
+            else
+            {
+                numShields += 2;
+            }
+            
+        }
+
+        p = Pieces[king + (direction * 8) + 1];
+        if (p.type != PieceType::Empty && p.isBlack == isBlack)
+        {
+            if (p.type == PieceType::Pawn)
+            {
+                numShields += 3;
+            }
+            else
+            {
+                numShields += 2;
+            }
+        }
+
+        p = Pieces[king + (direction * 8) - 1];
+        if (p.type != PieceType::Empty && p.isBlack == isBlack)
+        {
+            if (p.type == PieceType::Pawn)
+            {
+                numShields += 3;
+            }
+            else
+            {
+                numShields += 2;
+            }
+        }
+
+        return (numShields * 0.055f);
+    }
+
     float evaluate()
     {
-        float pieceTableMult = 0.02f;
+        debug++;
+
+        if (forcedDraw)
+        {
+            return 0.0f;
+        }
+
+        float pieceTableMult = 0.005f;
 
         float eval = 0.0f;
 
         eval += pieceDiffenece;
 
-        if (!blackTurn)
-        {
-            eval += (blackPieceTable * pieceTableMult * -1);
-            
-        }
-        else
-        {
-            eval += whitePieceTable * pieceTableMult;
-        }
+        //std::cout << "Piece difference: " << pieceDiffenece << std::endl;
+
+        eval += (whiteVisibility - blackVisibility) / 100.0f;
+
+        //std::cout << "mobilty diff: " << eval - pieceDiffenece << std::endl;
+
+        eval += kingSafety(false) - kingSafety(true);
+
+        eval += (whitePieceTable - blackPieceTable) * pieceTableMult;
+
+        //std::cout << "final eval: " << eval << std::endl;
+
 
         return eval;
     }
@@ -3968,12 +4059,12 @@ struct Board
             }
             randomHashValues.emplace_back(temp);
         }
+
+        previousPositions.insert(std::make_pair(hash, 1));
     }
 
     std::vector<move> LegalMoves(bool isBlack)
     {
-        debug = 0;
-        debug2 = 0;
         std::vector<move> moves;
         moves.reserve(50);
 
@@ -4106,15 +4197,208 @@ struct Board
                 }
             }
         }
+
+        if (isBlack)
+        {
+            blackVisibility = moves.size();
+        }
+        else
+        {
+            whiteVisibility = moves.size();
+        }
+
         return moves;
     }
 
+    std::vector<move> LegalCaptures(bool isBlack)
+    {
+        std::vector<move> moves;
+        moves.reserve(50);
+
+        bool checked = false;
+        bool doubleChecked = false;
+
+        std::vector<bool> checkMap;
+
+        if (isBlack)
+        {
+            checked = inCheck(bKing, true);
+        }
+        else
+        {
+            checked = inCheck(wKing, false);
+        }
+
+        std::vector<int> pin = genPinMap(isBlack);
+
+        std::vector<move> posMoves = possibleMoves(isBlack);
+
+        for (int i = 0; i < posMoves.size(); i++)
+        {
+            if (doubleChecked)
+            {
+                if (Pieces[posMoves[i].from].type == PieceType::King)
+                {
+                    std::vector<bool> attack = genAttackMap(!isBlack);
+
+                    if (!attack[posMoves[i].to])
+                    {
+                        if (Pieces[posMoves[i].to].type != PieceType::Empty)
+                        {
+                            moves.emplace_back(posMoves[i]);
+                        }
+                    }
+                }
+            }
+            else if (checked)
+            {
+                if (Pieces[posMoves[i].from].type == PieceType::King)
+                {
+                    std::vector<bool> attack = genAttackMap(!isBlack);
+
+                    if (!attack[posMoves[i].to])
+                    {
+                        if (Pieces[posMoves[i].to].type != PieceType::Empty)
+                        {
+                            moves.emplace_back(posMoves[i]);
+                        }
+                    }
+                }
+                else
+                {
+                    checkMap = genCheckMap(isBlack, doubleChecked);
+
+                    if (pin[posMoves[i].from] == 0) // if not pinned
+                    {
+                        //moving between king and the checking piece or taking checking piece
+                        if (checkMap[posMoves[i].to] == true)
+                        {
+                            if (posMoves[i].to == enPassant)
+                            {
+                                if (Pieces[posMoves[i].from].type == PieceType::Pawn)
+                                {
+                                    moves.emplace_back(posMoves[i]);
+                                    // PROBPAOSKDPAOWDKQPWOEKQPWOEK QWFIX FIX FIX WHY AM I DUMB IT DOESNT ALLOW NONE PAWNS TO BLOCK CHECK ON THE ENPASSANT SQUARE
+                                    //MAYBE NOT?
+                                }
+                            }
+                            else
+                            {
+                                if (Pieces[posMoves[i].from].type == PieceType::Pawn && (posMoves[i].to >= 56 || posMoves[i].to <= 7))
+                                {
+                                    int direction = -1;
+                                    if (Pieces[i].isBlack)
+                                    {
+                                        direction = 1;
+                                    }
+
+                                    moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 1), 0));
+                                    moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 2), 0));
+                                    moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 3), 0));
+                                }
+                                if (Pieces[posMoves[i].to].type != PieceType::Empty)
+                                {
+                                    moves.emplace_back(posMoves[i]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (Pieces[posMoves[i].from].type == PieceType::King)
+                {
+                    std::vector<bool> attack = genAttackMap(!isBlack);
+
+                    if (!attack[posMoves[i].to])
+                    {
+                        if (Pieces[posMoves[i].to].type != PieceType::Empty)
+                        {
+                            moves.emplace_back(posMoves[i]);
+                        }
+                    }
+                }
+                else
+                {
+
+                    if (pin[posMoves[i].from] == 0)
+                    {
+                        if (Pieces[posMoves[i].from].type == PieceType::Pawn && (posMoves[i].to >= 56 || posMoves[i].to <= 7))
+                        {
+                            int direction = -1;
+                            if (Pieces[i].isBlack)
+                            {
+                                direction = 1;
+                            }
+
+                            moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 1), 0));
+                            moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 2), 0));
+                            moves.emplace_back(move(posMoves[i].from, posMoves[i].to + (8 * direction * 3), 0));
+                        }
+                        if (Pieces[posMoves[i].to].type != PieceType::Empty)
+                        {
+                            moves.emplace_back(posMoves[i]);
+                        }
+                    }
+                    else if (pin[posMoves[i].from] != 0)
+                    {
+                        //special case for en passant
+                        if (pin[posMoves[i].from] == 9)
+                        {
+                            if (posMoves[i].to != enPassant)
+                            {
+                                moves.emplace_back(posMoves[i]);
+                            }
+                        }
+                        if (pin[posMoves[i].from] == pin[posMoves[i].to])
+                        {
+                            if (Pieces[posMoves[i].to].type != PieceType::Empty)
+                            {
+                                moves.emplace_back(posMoves[i]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return moves;
+    }
+
+    void moveOrdering(std::vector<move>& moves)
+    {
+        move pvMove = PVMoves.find(hash)->second;
+
+        for (int i = 0; i < moves.size(); i++)
+        {
+            if (moves[i].to == lastMovedToSquare)
+            {
+                moves[i].priority += 10.0f;
+            }
+
+            if (moves[i] == pvMove)
+            {
+                //std::cout << "pvMove found" << std::endl;
+                moves[i].priority += 300.0f;
+            }
+        }
+
+        std::sort(moves.begin(), moves.end(), compare);
+    }
+
+
     void Move(int from, int to)
     {
+        
+        if (Pieces[from].type == PieceType::Pawn)
+        {
+            previousPositions.clear();
+        }
+
         /*std::cout << "moved from " << from << " to " << to << std::endl;
         std::cout << "black " << blackPieceTable << std::endl;
         std::cout << "white " << whitePieceTable << std::endl;*/
-
+        
         if (Pieces[from].isBlack)
         {
             blackPieceTable -= pTables[Pieces[from].type - 1][63 - from];
@@ -4123,8 +4407,6 @@ struct Board
         {
             whitePieceTable -= pTables[Pieces[from].type - 1][from];
         }
-
-        
 
         //white promoting
         if (Pieces[from].type == PieceType::Pawn &&  to < 8)
@@ -4210,6 +4492,22 @@ struct Board
                 pieceDiffenece -= pVal[Pieces[to].type];
                 whitePieceTable -= pTables[Pieces[from].type - 1][from];
             }
+        }
+
+        if (Pieces[from].type == PieceType::Pawn)
+        {
+            halfMoveCount = 0;
+        }
+        if (Pieces[to].type != PieceType::Empty)
+        {
+            halfMoveCount = 0;
+        }
+
+        halfMoveCount++;
+
+        if (halfMoveCount > 100)
+        {
+            forcedDraw = true;
         }
 
         //Move rook if castling
@@ -4378,6 +4676,21 @@ struct Board
         hash ^= randomHashValuesIsBlack;
         blackTurn = !blackTurn;
 
+        lastMovedToSquare = to;
+
+        auto it = previousPositions.find(hash);
+        if (it != previousPositions.end())
+        {
+            it->second = it->second + 1;
+            if (it->second >= 3)
+            {
+                forcedDraw = true;
+            }
+        }
+        else
+        {
+            previousPositions.insert(std::make_pair(hash, 1));
+        }
     }
 };
 
@@ -4407,14 +4720,153 @@ int perft(Board b, int depth)
     return count;
 }
 
+float Quiesence(float alpha, float beta, int qDepth, Board board)
+{
+    if (qDepth == 0)
+    {
+        //std::cout << "reached depth 0" << std::endl;
+        return board.evaluate();
+    }
+
+    float eval = board.evaluate();
+
+    //std::cout << "stand_pat: " << stand_pat << std::endl;
+
+    /*if (alpha >= beta)
+    {
+        std::cout << "returned stand pat from the thing! " << " stand_pat: " << stand_pat << " alpha: " << alpha << " beta: " << beta << std::endl;
+        return stand_pat;
+    }    */
+
+    /*if (alpha < stand_pat)
+    {
+        alpha = stand_pat;
+    }*/
+
+    std::vector<move> moves = board.LegalCaptures(board.blackTurn);
+
+    float bestEval;
+
+    if (board.blackTurn)
+    {
+        bestEval = 1000000.0f;
+    }
+    else
+    {
+        bestEval = -1000000.0f;
+    }
+
+    //std::cout << moves.size() << std::endl;
+
+    for (int i = 0; i < moves.size(); i++)
+    {
+        Board b = board;
+        b.Move(moves[i].from, moves[i].to);
+
+        float score = Quiesence(alpha, beta, qDepth - 1, b);
+
+        //std::cout << "score: " << score << std::endl;
+
+
+        if (!board.blackTurn)
+        {
+            if (score > bestEval)
+            {
+                alpha = score;
+                bestEval = score;
+            }
+        }
+        else
+        {
+            if (score < bestEval)
+            {
+                beta = score;
+                bestEval = score;
+            }
+        }
+    }
+
+    if (!board.blackTurn)
+    {
+        if (eval < alpha)
+        {
+            return alpha;
+        }
+        else
+        {
+            return eval;
+        }
+    }
+    else
+    {
+        if (eval > beta)
+        {
+            return beta;
+        }
+        else
+        {
+            return eval;
+        }
+    }
+
+
+    /*std::vector<move> moves = board.LegalCaptures(board.blackTurn);
+
+    for (int i = 0; i < moves.size(); i++)
+    {
+        Board b = board;
+        b.Move(moves[i].from, moves[i].to);
+
+        float score = -Quiesence(-beta, -alpha, qDepth - 1, b);
+
+        //std::cout << "score: " << score << std::endl;
+
+        if (!board.blackTurn)
+        {
+            std::cout << "black turn standpat: " << stand_pat << " score: " << score << std::endl;
+
+            stand_pat = std::min(stand_pat, score);
+
+            alpha = std::min(alpha, stand_pat);
+        }
+        else
+        {
+            stand_pat = std::max(stand_pat, score);
+
+            alpha = std::max(alpha, stand_pat);
+        }
+        
+
+        if (alpha <= beta)
+        {
+            break;
+        }
+        
+
+        //if (score > alpha)
+        //{
+        //    alpha = score;
+        //}
+
+        //if (score >= beta)
+        //{
+        //    std::cout << "returned score! " << " stand_pat: " << stand_pat << " alpha: " << alpha << " beta: " << beta << " score: " << score << std::endl;
+        //    return score;
+        //}
+            
+    }
+    //std::cout << "returned stand_pat! " << " stand_pat: " << stand_pat << " alpha: " << alpha << " beta: " << beta << std::endl;
+    return stand_pat;*/
+}
+
 float Minimax(float alpha, float beta, int depth, Board board, int qDepth)
 {
     std::vector<move> moves;
 
     //std::cout << depth << " : " << qDepth << std::endl;
 
-    float maxEval = -INFINITY;
-    float minEval = INFINITY;
+    float maxEval = -1000000.0f - depth;
+    float minEval = 1000000.0f + depth;
 
     if (board.transpositionTable->find(board.hash) != board.transpositionTable->end() && board.transpositionTable->at(board.hash).depth >= depth)
     {
@@ -4422,14 +4874,19 @@ float Minimax(float alpha, float beta, int depth, Board board, int qDepth)
     }
     else
     {
-        if (board.transpositionTable->find(board.hash) != board.transpositionTable->end())
+        /*if (board.transpositionTable->find(board.hash) != board.transpositionTable->end())
         {
             moves = board.transpositionTable->at(board.hash).moves;
 
             std::sort(moves.begin(), moves.end(), compare);
-        }
+        }*/
         if (depth == 0)
         {
+            //return board.evaluate();
+
+            return Quiesence(alpha, beta, qDepth, board);
+
+            /*
             if (qDepth == 0)
             {
                 float eval = board.evaluate();
@@ -4522,15 +4979,25 @@ float Minimax(float alpha, float beta, int depth, Board board, int qDepth)
                     return minEval;
                 }
                 return board.evaluate();
-            }
+            }*/
         }
         else if (!board.blackTurn)
         {
             moves = board.LegalMoves(board.blackTurn);
 
+            if (moves.size() == 0)
+            {
+                if (board.inCheck(board.wKing, false))
+                {
+                    return -1000000.0f - depth;
+                }
+
+                return 0.0f;
+            }
+
             std::sort(moves.begin(), moves.end(), compare);
 
-            maxEval = -INFINITY;
+            maxEval = -1000000.0f;
 
             for (int i = 0; i < moves.size(); i++)
             {
@@ -4559,9 +5026,19 @@ float Minimax(float alpha, float beta, int depth, Board board, int qDepth)
         {
             moves = board.LegalMoves(board.blackTurn);
 
+            if (moves.size() == 0)
+            {
+                if (board.inCheck(board.bKing, true))
+                {
+                    return 1000000.0f + depth;
+                }
+
+                return 0.0f;
+            }
+
             std::sort(moves.begin(), moves.end(), compare);
 
-            minEval = INFINITY;
+            minEval = 1000000.0f;
 
             for (int i = 0; i < moves.size(); i++)
             {
@@ -4575,7 +5052,6 @@ float Minimax(float alpha, float beta, int depth, Board board, int qDepth)
                 {
                     break;
                 }
-
             }
             moveInfo temp;
             temp.eval = minEval;
@@ -4628,13 +5104,15 @@ int main()
     }
     std::unordered_map<uint32_t, moveInfo> transpositionTable;
 
-    Board board;
+    Board board;    
 
     board.transpositionTable = &transpositionTable;
 
+    //board.loadPosition("1k1r4/pppr3p/5p2/1Q1n1Np1/4p1P1/P1P2P1P/qPK5/R6R b - -");
     board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-
     board.initHash();
+
+    //std::cout << "q search result: " << Quiesence(-INFINITY, INFINITY, 10, board) << std::endl;
 
     bool prevlClick = false; 
 
@@ -4678,7 +5156,7 @@ int main()
         {
             lClick = sf::Mouse::isButtonPressed(sf::Mouse::Left);
         }
-
+        
         if (board.blackTurn)
         {
             std::vector<move> moves = board.LegalMoves(board.blackTurn);
@@ -4709,39 +5187,69 @@ int main()
                 debug = 0;
                 debug2 = 0;
 
-                int bestMoveA;
-                int bestMoveB;
-                float bestMoveE = INFINITY;
+                int bestMoveA = -1;
+                int bestMoveB = 0;
+
+                float alpha = -1000000.0f;
+                float beta = 1000000.0f;
+
+                float bestMoveE = 1000000.0f;
 
                 auto t1 = std::chrono::high_resolution_clock::now();
 
-                for (int i = 0; i < allMoves.size(); i++)
-                {
-                    for (int j = 0; j < allMoves[i].size(); j++)
-                    {
+                //for (int i = 0; i < allMoves.size(); i++)
+                //{
+                //    for (int j = 0; j < allMoves[i].size(); j++)
+                //    {
 
-                        Board b = board;
-                        b.Move(i, allMoves[i][j]);
-                        float temp = Minimax(-INFINITY, INFINITY, 4, b, 1);
-                        if (temp <= bestMoveE)
-                        {
-                            bestMoveA = i;
-                            bestMoveB = allMoves[i][j];
-                            bestMoveE = temp;
-                        }
+                //        Board b = board;
+                //        b.Move(i, allMoves[i][j]);
+                //        float temp = Minimax(-INFINITY, INFINITY, 4, b, 2);
+                //        if (temp <= bestMoveE)
+                //        {
+                //            bestMoveA = i;
+                //            bestMoveB = allMoves[i][j];
+                //            bestMoveE = temp;
+                //        }\\\\\\\\\\\\\\
+                //    }
+                //}
+
+                
+
+                for (int i = 0; i < moves.size(); i++)
+                {
+                    float minEval = 1000000.0f;
+
+                    Board b = board;
+                    b.Move(moves[i].from, moves[i].to);
+                    float eval = Minimax(alpha, beta, 4, b, 3);
+
+                    minEval = std::min(minEval, eval);
+                    beta = std::min(beta, minEval);
+
+                    if (minEval < bestMoveE || bestMoveA == -1)
+                    {
+                        std::cout << "updated move to " << moves[i].from << " : " << moves[i].to << " eval: " << minEval << std::endl;
+                        bestMoveA = moves[i].from;
+                        bestMoveB = moves[i].to;
+                        bestMoveE = minEval;
                     }
                 }
+
+                board.Move(bestMoveA, bestMoveB);
+
                 auto t2 = std::chrono::high_resolution_clock::now();
 
                 std::chrono::duration<double, std::milli> ms_double = t2 - t1;
 
-                std::cout << "played move " << bestMoveA << " to " << bestMoveB << " in " << ms_double.count() << "ms\n";
-                board.Move(bestMoveA, bestMoveB);
+                std::cout << "played move " << bestMoveA << " to " << bestMoveB << " in " << ms_double.count() << "ms\n" << "eval: " << board.evaluate() << "\n";
 
-                
+                std::cout << "whitePieceTable: " << board.whitePieceTable << " blackPieceTable: " << board.blackPieceTable << " = " << ((board.whitePieceTable - board.blackPieceTable) * 0.005f) << std::endl;
+
+                std::cout << "white moves: " << board.LegalMoves(false).size() << " black moves: " << board.LegalMoves(true).size() << " = " << (board.LegalMoves(false).size() - board.LegalMoves(true).size()) / 100.0f << std::endl;
 
                 std::cout << "debug: " << debug << std::endl;
-                std::cout << "debug2 : " << debug2 << std::endl;
+                //std::cout << "debug2 : " << debug2 << std::endl;
 
                 transpositionTable.clear();
 
@@ -4768,12 +5276,9 @@ int main()
                 }
             }
         }
-
+        
         if (lClick != prevlClick && lClick)
         {
-            std::cout << board.hash << std::endl;
-
-            std::cout << "hash table size: " << transpositionTable.size() << std::endl;
             int x = floor(sf::Mouse::getPosition(app).x / 64);
             int y = floor(sf::Mouse::getPosition(app).y / 64);
             /*
